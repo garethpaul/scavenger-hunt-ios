@@ -57,17 +57,17 @@
 		5624AB58A7EC2C5F02E88F1D /* Pods-engagement.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-engagement.release.xcconfig"; path = "Pods/Target Support Files/Pods-engagement/Pods-engagement.release.xcconfig"; sourceTree = "<group>"; };
 		A1212FFE30ABAFBF22E440D6 /* Pods_engagement.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_engagement.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		B0CBA42716B10448E7978101 /* Pods_engagementTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_engagementTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		C365B9D01DF07A6200E8C8AF /* engagement.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = engagement.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C365B9D01DF07A6200E8C8AF /* TreasureHunt.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TreasureHunt.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C365B9D31DF07A6200E8C8AF /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		C365B9D51DF07A6200E8C8AF /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		C365B9D81DF07A6200E8C8AF /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		C365B9DA1DF07A6200E8C8AF /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C365B9DD1DF07A6200E8C8AF /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		C365B9DF1DF07A6200E8C8AF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		C365B9E41DF07A6200E8C8AF /* engagementTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = engagementTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		C365B9E41DF07A6200E8C8AF /* TreasureHunt.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TreasureHunt.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C365B9E81DF07A6200E8C8AF /* engagementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = engagementTests.swift; sourceTree = "<group>"; };
 		C365B9EA1DF07A6200E8C8AF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		C365B9EF1DF07A6200E8C8AF /* engagementUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = engagementUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		C365B9EF1DF07A6200E8C8AF /* TreasureHunt.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TreasureHunt.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C365B9F31DF07A6200E8C8AF /* engagementUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = engagementUITests.swift; sourceTree = "<group>"; };
 		C365B9F51DF07A6200E8C8AF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		CA79C97FDD36F3080406BA36 /* Pods-engagementTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-engagementTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-engagementTests/Pods-engagementTests.release.xcconfig"; sourceTree = "<group>"; };
@@ -140,9 +140,9 @@
 		C365B9D11DF07A6200E8C8AF /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				C365B9D01DF07A6200E8C8AF /* engagement.app */,
-				C365B9E41DF07A6200E8C8AF /* engagementTests.xctest */,
-				C365B9EF1DF07A6200E8C8AF /* engagementUITests.xctest */,
+				C365B9D01DF07A6200E8C8AF /* TreasureHunt.app */,
+				C365B9E41DF07A6200E8C8AF /* TreasureHunt.xctest */,
+				C365B9EF1DF07A6200E8C8AF /* TreasureHunt.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -181,9 +181,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		C365B9CF1DF07A6200E8C8AF /* engagement */ = {
+		C365B9CF1DF07A6200E8C8AF /* TreasureHunt */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = C365B9F81DF07A6200E8C8AF /* Build configuration list for PBXNativeTarget "engagement" */;
+			buildConfigurationList = C365B9F81DF07A6200E8C8AF /* Build configuration list for PBXNativeTarget "TreasureHunt" */;
 			buildPhases = (
 				009973E7D2B1086DA00D3994 /* [CP] Check Pods Manifest.lock */,
 				C365B9CC1DF07A6200E8C8AF /* Sources */,
@@ -197,14 +197,14 @@
 			);
 			dependencies = (
 			);
-			name = engagement;
+			name = TreasureHunt;
 			productName = engagement;
-			productReference = C365B9D01DF07A6200E8C8AF /* engagement.app */;
+			productReference = C365B9D01DF07A6200E8C8AF /* TreasureHunt.app */;
 			productType = "com.apple.product-type.application";
 		};
-		C365B9E31DF07A6200E8C8AF /* engagementTests */ = {
+		C365B9E31DF07A6200E8C8AF /* TreasureHuntTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = C365B9FB1DF07A6200E8C8AF /* Build configuration list for PBXNativeTarget "engagementTests" */;
+			buildConfigurationList = C365B9FB1DF07A6200E8C8AF /* Build configuration list for PBXNativeTarget "TreasureHuntTests" */;
 			buildPhases = (
 				FB9AF066304DF98DA7A8B6AD /* [CP] Check Pods Manifest.lock */,
 				C365B9E01DF07A6200E8C8AF /* Sources */,
@@ -218,14 +218,14 @@
 			dependencies = (
 				C365B9E61DF07A6200E8C8AF /* PBXTargetDependency */,
 			);
-			name = engagementTests;
+			name = TreasureHuntTests;
 			productName = engagementTests;
-			productReference = C365B9E41DF07A6200E8C8AF /* engagementTests.xctest */;
+			productReference = C365B9E41DF07A6200E8C8AF /* TreasureHunt.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		C365B9EE1DF07A6200E8C8AF /* engagementUITests */ = {
+		C365B9EE1DF07A6200E8C8AF /* TreasureHuntUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = C365B9FE1DF07A6200E8C8AF /* Build configuration list for PBXNativeTarget "engagementUITests" */;
+			buildConfigurationList = C365B9FE1DF07A6200E8C8AF /* Build configuration list for PBXNativeTarget "TreasureHuntUITests" */;
 			buildPhases = (
 				E9C5F77E37601A4C3740F8D8 /* [CP] Check Pods Manifest.lock */,
 				C365B9EB1DF07A6200E8C8AF /* Sources */,
@@ -239,9 +239,9 @@
 			dependencies = (
 				C365B9F11DF07A6200E8C8AF /* PBXTargetDependency */,
 			);
-			name = engagementUITests;
+			name = TreasureHuntUITests;
 			productName = engagementUITests;
-			productReference = C365B9EF1DF07A6200E8C8AF /* engagementUITests.xctest */;
+			productReference = C365B9EF1DF07A6200E8C8AF /* TreasureHunt.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
@@ -251,11 +251,13 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 0730;
-				LastUpgradeCheck = 0730;
+				LastUpgradeCheck = 0810;
 				ORGANIZATIONNAME = "Gareth Paul Jones";
 				TargetAttributes = {
 					C365B9CF1DF07A6200E8C8AF = {
 						CreatedOnToolsVersion = 7.3;
+						DevelopmentTeam = 53AF9EMAN4;
+						LastSwiftMigration = 0810;
 					};
 					C365B9E31DF07A6200E8C8AF = {
 						CreatedOnToolsVersion = 7.3;
@@ -267,7 +269,7 @@
 					};
 				};
 			};
-			buildConfigurationList = C365B9CB1DF07A6200E8C8AF /* Build configuration list for PBXProject "engagement" */;
+			buildConfigurationList = C365B9CB1DF07A6200E8C8AF /* Build configuration list for PBXProject "TreasureHunt" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
@@ -280,9 +282,9 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				C365B9CF1DF07A6200E8C8AF /* engagement */,
-				C365B9E31DF07A6200E8C8AF /* engagementTests */,
-				C365B9EE1DF07A6200E8C8AF /* engagementUITests */,
+				C365B9CF1DF07A6200E8C8AF /* TreasureHunt */,
+				C365B9E31DF07A6200E8C8AF /* TreasureHuntTests */,
+				C365B9EE1DF07A6200E8C8AF /* TreasureHuntUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -483,12 +485,12 @@
 /* Begin PBXTargetDependency section */
 		C365B9E61DF07A6200E8C8AF /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = C365B9CF1DF07A6200E8C8AF /* engagement */;
+			target = C365B9CF1DF07A6200E8C8AF /* TreasureHunt */;
 			targetProxy = C365B9E51DF07A6200E8C8AF /* PBXContainerItemProxy */;
 		};
 		C365B9F11DF07A6200E8C8AF /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = C365B9CF1DF07A6200E8C8AF /* engagement */;
+			target = C365B9CF1DF07A6200E8C8AF /* TreasureHunt */;
 			targetProxy = C365B9F01DF07A6200E8C8AF /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -527,8 +529,10 @@
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
@@ -573,8 +577,10 @@
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
@@ -593,6 +599,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
+				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
 			};
@@ -603,6 +610,7 @@
 			baseConfigurationReference = 455F8BF7F88D1024F3062A47 /* Pods-engagement.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				DEVELOPMENT_TEAM = 53AF9EMAN4;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/engagement",
@@ -611,7 +619,8 @@
 				INFOPLIST_FILE = engagement/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.gpj.engagement;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = TreasureHunt;
+				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
 		};
@@ -620,6 +629,7 @@
 			baseConfigurationReference = 5624AB58A7EC2C5F02E88F1D /* Pods-engagement.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				DEVELOPMENT_TEAM = 53AF9EMAN4;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/engagement",
@@ -628,7 +638,8 @@
 				INFOPLIST_FILE = engagement/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.gpj.engagement;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = TreasureHunt;
+				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
 		};
@@ -640,8 +651,8 @@
 				INFOPLIST_FILE = engagementTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.gpj.engagementTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/engagement.app/engagement";
+				PRODUCT_NAME = TreasureHunt;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/TreasureHunt.app/TreasureHunt";
 			};
 			name = Debug;
 		};
@@ -653,8 +664,8 @@
 				INFOPLIST_FILE = engagementTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.gpj.engagementTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/engagement.app/engagement";
+				PRODUCT_NAME = TreasureHunt;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/TreasureHunt.app/TreasureHunt";
 			};
 			name = Release;
 		};
@@ -665,7 +676,7 @@
 				INFOPLIST_FILE = engagementUITests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.gpj.engagementUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = TreasureHunt;
 				TEST_TARGET_NAME = engagement;
 			};
 			name = Debug;
@@ -677,7 +688,7 @@
 				INFOPLIST_FILE = engagementUITests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.gpj.engagementUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = TreasureHunt;
 				TEST_TARGET_NAME = engagement;
 			};
 			name = Release;
@@ -685,7 +696,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		C365B9CB1DF07A6200E8C8AF /* Build configuration list for PBXProject "engagement" */ = {
+		C365B9CB1DF07A6200E8C8AF /* Build configuration list for PBXProject "TreasureHunt" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C365B9F61DF07A6200E8C8AF /* Debug */,
@@ -694,29 +705,32 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		C365B9F81DF07A6200E8C8AF /* Build configuration list for PBXNativeTarget "engagement" */ = {
+		C365B9F81DF07A6200E8C8AF /* Build configuration list for PBXNativeTarget "TreasureHunt" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C365B9F91DF07A6200E8C8AF /* Debug */,
 				C365B9FA1DF07A6200E8C8AF /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
-		C365B9FB1DF07A6200E8C8AF /* Build configuration list for PBXNativeTarget "engagementTests" */ = {
+		C365B9FB1DF07A6200E8C8AF /* Build configuration list for PBXNativeTarget "TreasureHuntTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C365B9FC1DF07A6200E8C8AF /* Debug */,
 				C365B9FD1DF07A6200E8C8AF /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
-		C365B9FE1DF07A6200E8C8AF /* Build configuration list for PBXNativeTarget "engagementUITests" */ = {
+		C365B9FE1DF07A6200E8C8AF /* Build configuration list for PBXNativeTarget "TreasureHuntUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C365B9FF1DF07A6200E8C8AF /* Debug */,
 				C365BA001DF07A6200E8C8AF /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
