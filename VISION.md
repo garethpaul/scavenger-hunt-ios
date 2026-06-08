@@ -34,6 +34,11 @@ Contribution rules:
 
 ## Security And Responsible Use
 
+Canonical security policy and reporting:
+
+- [`SECURITY.md`](SECURITY.md)
+
+
 Scavenger-hunt apps can expose private places and location history. The app
 should keep coordinates intentional, avoid uploading location data, and make
 user tracking behavior visible.
