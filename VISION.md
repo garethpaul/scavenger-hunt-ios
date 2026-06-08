@@ -17,6 +17,7 @@ Priority:
 - Keep the prize annotation and custom pin behavior understandable
 - Keep annotation rendering safe when Mapbox supplies unexpected metadata
 - Avoid committing Mapbox tokens or private style URLs
+- Keep completed maintenance plans under `docs/plans`
 - Treat Swift and CocoaPods versions as legacy until documented
 
 Next priorities:

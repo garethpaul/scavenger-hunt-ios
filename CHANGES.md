@@ -14,3 +14,5 @@
   build-setting placeholder.
 - Added an ignored `MapboxSecrets.xcconfig` template for local token setup.
 - Fixed the blank Mapbox style URL and the location permission typo.
+- Added canonical `docs/plans` coverage and made the iOS contract checker
+  require completed plans.

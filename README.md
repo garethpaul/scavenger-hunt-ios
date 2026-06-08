@@ -12,10 +12,15 @@ This README is based on the checked-in source, manifests, scripts, and repositor
 ## Repository Contents
 
 - `README.md` - project overview and local usage notes
+- `CHANGES.md` - maintenance history for iOS contract checks
+- `Makefile` - local verification entry points
 - `Podfile` - Apple platform dependency metadata
+- `docs/plans` - completed maintenance plans for the current baseline
 - `engagement` - source or example code
 - `engagementTests` - source or example code
 - `engagementUITests` - source or example code
+- `plans` - historical implementation notes
+- `scripts` - static iOS contract validators
 - `Podfile.lock` - Apple platform dependency metadata
 - `SECURITY.md` - security reporting and disclosure guidance
 - `TreasureHunt.xcodeproj` - Xcode project file
@@ -61,6 +66,7 @@ Mapbox tokens out of git.
 - `make check` runs static checks for Mapbox token placeholders, asset
   references, safe annotation-image handling, CocoaPods lock consistency, and
   Xcode build availability.
+- The static checker also requires completed canonical plans under `docs/plans`.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 
@@ -79,6 +85,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - This looks like an Apple platform project or sample. Xcode, Swift, CocoaPods, and deployment target versions may need to match the original project era.
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.
 - See `VISION.md` for project direction and contribution guardrails.
+- See `docs/plans/2026-06-08-scavenger-hunt-ios-baseline.md` for the canonical
+  Mapbox/iOS contract baseline.
 
 ## Contributing
 
