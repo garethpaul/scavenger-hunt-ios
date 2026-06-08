@@ -15,6 +15,7 @@ Priority:
 
 - Preserve the proposal/scavenger-hunt map flow
 - Keep the prize annotation and custom pin behavior understandable
+- Keep annotation rendering safe when Mapbox supplies unexpected metadata
 - Avoid committing Mapbox tokens or private style URLs
 - Treat Swift and CocoaPods versions as legacy until documented
 

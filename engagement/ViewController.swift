@@ -21,7 +21,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MGLMapViewDel
         
         
         logoView = UIImageView(frame: CGRect(x: 0, y: 10, width: 55, height: 40))
-        logoView.image = UIImage(named: "Logo")!
+        logoView.image = UIImage(named: "Logo")
         logoView.frame.origin.x = (view.frame.size.width - logoView.frame.size.width) / 2
         logoView.frame.origin.y = 20
         
@@ -63,17 +63,17 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MGLMapViewDel
     
     func mapView(_ mapView: MGLMapView, imageFor annotation: MGLAnnotation) -> MGLAnnotationImage? {
         
-        var image: UIImage!
-        if (annotation.title! == "Prize"){
-            image = UIImage(named: "pin3")
-        } else {
-            image = UIImage(named:"BluePin")
+        let annotationTitle = annotation.title ?? nil
+        let imageName = annotationTitle == "Prize" ? "pin3" : "BluePin"
+
+        guard let baseImage = UIImage(named: imageName) else {
+            return nil
         }
         
-        image = image.withAlignmentRectInsets(UIEdgeInsetsMake(0, 0, image.size.height/10, 0))
+        let image = baseImage.withAlignmentRectInsets(UIEdgeInsetsMake(0, 0, baseImage.size.height/10, 0))
         
-        // Initialize the ‘pisa’ annotation image with the UIImage we just loaded.
-        let annotationImage = MGLAnnotationImage(image: image, reuseIdentifier: annotation.title!!)
+        let reuseIdentifier = annotationTitle ?? imageName
+        let annotationImage = MGLAnnotationImage(image: image, reuseIdentifier: reuseIdentifier)
         
         return annotationImage
         
@@ -91,7 +91,11 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MGLMapViewDel
     }
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        let locValue:CLLocationCoordinate2D = manager.location!.coordinate
+        guard let location = locations.last else {
+            return
+        }
+
+        let locValue: CLLocationCoordinate2D = location.coordinate
         print("locations = \(locValue.latitude) \(locValue.longitude)")
     }
 

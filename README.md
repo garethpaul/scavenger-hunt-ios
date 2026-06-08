@@ -59,7 +59,8 @@ Mapbox tokens out of git.
 
 - Xcode's test action or `xcodebuild test` with the appropriate scheme and destination
 - `make verify` runs static checks for Mapbox token placeholders, asset
-  references, CocoaPods lock consistency, and Xcode build availability.
+  references, safe annotation-image handling, CocoaPods lock consistency, and
+  Xcode build availability.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 

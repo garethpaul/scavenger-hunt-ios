@@ -29,8 +29,32 @@ view_controller = File.read('engagement/ViewController.swift')
 if view_controller.include?('URL(string: "")')
   failures << 'ViewController.swift must not pass a blank Mapbox style URL'
 end
+if view_controller.match?(/annotation\.title!/)
+  failures << 'ViewController.swift must not force unwrap annotation titles'
+end
+if view_controller.include?('var image: UIImage!')
+  failures << 'ViewController.swift must not force unwrap marker images'
+end
+if view_controller.match?(/UIImage\(named:\s*"Logo"\)!/)
+  failures << 'ViewController.swift must not force unwrap the logo asset'
+end
+if view_controller.include?('manager.location!.coordinate')
+  failures << 'ViewController.swift must use didUpdateLocations values without force unwrapping manager.location'
+end
+unless view_controller.include?('let annotationTitle = annotation.title ?? nil')
+  failures << 'ViewController.swift must flatten optional Mapbox annotation titles before reuse'
+end
+unless view_controller.include?('guard let baseImage = UIImage(named: imageName) else')
+  failures << 'ViewController.swift must guard marker image loading'
+end
+unless view_controller.include?('let reuseIdentifier = annotationTitle ?? imageName')
+  failures << 'ViewController.swift must provide a fallback marker reuse identifier'
+end
 
 asset_names = Dir['engagement/Assets.xcassets/**/*.imageset'].map { |path| File.basename(path, '.imageset') }
+%w[Logo pin3 BluePin].each do |image_name|
+  failures << "missing required annotation asset #{image_name}" unless asset_names.include?(image_name)
+end
 view_controller.scan(/UIImage\(named:\s*"([^"]+)"/).flatten.each do |image_name|
   failures << "missing asset for UIImage(named: \"#{image_name}\")" unless asset_names.include?(image_name)
 end
