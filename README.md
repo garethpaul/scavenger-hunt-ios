@@ -1,5 +1,8 @@
 # scavenger-hunt-ios
 
+<!-- README-OVERVIEW-IMAGE -->
+![Project overview](docs/readme-overview.svg)
+
 ## Overview
 
 `garethpaul/scavenger-hunt-ios` is an Apple platform application or Swift sample. A scavenger hunt proposal app.
@@ -78,4 +81,3 @@ Keep changes small and tied to the project that is already present in this repos
 Prior README summary:
 
 > scavenger-hunt-ios <!-- README-OVERVIEW-IMAGE --> A scavenger hunt proposal app.
-
