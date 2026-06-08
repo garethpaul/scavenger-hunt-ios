@@ -53,6 +53,12 @@ end
 if view_controller.include?('manager.location!.coordinate')
   failures << 'ViewController.swift must use didUpdateLocations values without force unwrapping manager.location'
 end
+unless view_controller.include?('locationManager.delegate = self')
+  failures << 'ViewController.swift must assign the location manager delegate before requesting authorization'
+end
+unless view_controller.include?('locationManager.requestWhenInUseAuthorization()')
+  failures << 'ViewController.swift must request when-in-use location authorization'
+end
 unless view_controller.include?('let annotationTitle = annotation.title ?? nil')
   failures << 'ViewController.swift must flatten optional Mapbox annotation titles before reuse'
 end

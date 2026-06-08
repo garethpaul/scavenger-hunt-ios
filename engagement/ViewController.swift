@@ -19,6 +19,8 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MGLMapViewDel
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        locationManager.delegate = self
+        locationManager.requestWhenInUseAuthorization()
         
         logoView = UIImageView(frame: CGRect(x: 0, y: 10, width: 55, height: 40))
         logoView.image = UIImage(named: "Logo")

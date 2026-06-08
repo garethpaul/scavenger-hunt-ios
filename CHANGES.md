@@ -2,6 +2,8 @@
 
 ## 2026-06-08
 
+- Added an explicit when-in-use location authorization request before Mapbox
+  user-location tracking and made the iOS contract checker preserve it.
 - Added `make check` as the shared repository verification alias.
 - Removed crash-prone force unwraps in the Mapbox annotation-image path and
   location update handler.

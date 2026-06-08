@@ -65,7 +65,8 @@ Mapbox tokens out of git.
 - Xcode's test action or `xcodebuild test` with the appropriate scheme and destination
 - `make check` runs static checks for Mapbox token placeholders, asset
   references, safe annotation-image handling, CocoaPods lock consistency, and
-  Xcode build availability.
+  location authorization before map tracking. It also reports whether an Xcode
+  build could be attempted locally.
 - The static checker also requires completed canonical plans under `docs/plans`.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
@@ -87,6 +88,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - See `VISION.md` for project direction and contribution guardrails.
 - See `docs/plans/2026-06-08-scavenger-hunt-ios-baseline.md` for the canonical
   Mapbox/iOS contract baseline.
+- See `docs/plans/2026-06-08-location-authorization.md` for the location
+  permission guard.
 
 ## Contributing
 
