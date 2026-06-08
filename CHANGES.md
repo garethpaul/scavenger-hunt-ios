@@ -2,6 +2,7 @@
 
 ## 2026-06-08
 
+- Added `make check` as the shared repository verification alias.
 - Removed crash-prone force unwraps in the Mapbox annotation-image path and
   location update handler.
 - Extended the iOS contract checker to require safe annotation title handling,
