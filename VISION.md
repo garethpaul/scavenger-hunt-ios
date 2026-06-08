@@ -38,7 +38,7 @@ Scavenger-hunt apps can expose private places and location history. The app
 should keep coordinates intentional, avoid uploading location data, and make
 user tracking behavior visible.
 
-## What We Will Not Merge For Now
+## What We Will Not Merge (For Now)
 
 - Checked-in Mapbox credentials
 - Silent user-location upload
