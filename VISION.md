@@ -44,3 +44,6 @@ user tracking behavior visible.
 - Silent user-location upload
 - Unexplained private-location changes
 - Broad app rewrites without preserving the proposal flow
+
+This list is a roadmap guardrail, not a permanent rule.
+Strong user demand and strong technical rationale can change it.
