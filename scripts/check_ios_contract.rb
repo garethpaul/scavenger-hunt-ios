@@ -53,6 +53,10 @@ end
 if view_controller.include?('manager.location!.coordinate')
   failures << 'ViewController.swift must use didUpdateLocations values without force unwrapping manager.location'
 end
+if view_controller.match?(/print\s*\(\s*"locations\s*=/) ||
+   view_controller.match?(/print\s*\([^)]*\.latitude[^)]*\.longitude/m)
+  failures << 'ViewController.swift must not log precise user coordinates'
+end
 unless view_controller.include?('locationManager.delegate = self')
   failures << 'ViewController.swift must assign the location manager delegate before requesting authorization'
 end

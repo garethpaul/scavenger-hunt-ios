@@ -93,12 +93,9 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MGLMapViewDel
     }
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        guard let location = locations.last else {
+        guard locations.last != nil else {
             return
         }
-
-        let locValue: CLLocationCoordinate2D = location.coordinate
-        print("locations = \(locValue.latitude) \(locValue.longitude)")
     }
 
 

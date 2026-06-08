@@ -2,6 +2,8 @@
 
 ## 2026-06-08
 
+- Removed precise coordinate logging from the location update callback and
+  added static validation to prevent it from returning.
 - Added an explicit when-in-use location authorization request before Mapbox
   user-location tracking and made the iOS contract checker preserve it.
 - Added `make check` as the shared repository verification alias.

@@ -18,6 +18,7 @@ Priority:
 - Keep annotation rendering safe when Mapbox supplies unexpected metadata
 - Avoid committing Mapbox tokens or private style URLs
 - Request visible location authorization before user-location tracking
+- Avoid logging precise user coordinates
 - Keep completed maintenance plans under `docs/plans`
 - Treat Swift and CocoaPods versions as legacy until documented
 

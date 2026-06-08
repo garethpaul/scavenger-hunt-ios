@@ -67,6 +67,7 @@ Mapbox tokens out of git.
   references, safe annotation-image handling, CocoaPods lock consistency, and
   location authorization before map tracking. It also reports whether an Xcode
   build could be attempted locally.
+- `make check` also rejects precise user-location coordinate logging.
 - The static checker also requires completed canonical plans under `docs/plans`.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
@@ -90,6 +91,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   Mapbox/iOS contract baseline.
 - See `docs/plans/2026-06-08-location-authorization.md` for the location
   permission guard.
+- See `docs/plans/2026-06-08-location-log-privacy.md` for the coordinate
+  logging privacy guard.
 
 ## Contributing
 
