@@ -31,7 +31,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MGLMapViewDel
         
         // Setup Mapbox Treasure Map
         
-        let styleURL = URL(string: "")
+        let styleURL: URL? = nil
         mapView = MGLMapView(frame: view.bounds,
                                  styleURL: styleURL)
         mapView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
@@ -97,4 +97,3 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MGLMapViewDel
 
 
 }
-

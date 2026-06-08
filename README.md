@@ -42,9 +42,14 @@ Additional scan context:
 git clone https://github.com/garethpaul/scavenger-hunt-ios.git
 cd scavenger-hunt-ios
 pod install
+cp engagement/MapboxSecrets.xcconfig.example engagement/MapboxSecrets.xcconfig
 ```
 
 The setup commands above are derived from repository files. Legacy mobile, Python, or JavaScript samples may require older SDKs or package versions than a modern workstation uses by default.
+
+Set `MAPBOX_ACCESS_TOKEN` in Xcode build settings or include the copied
+`engagement/MapboxSecrets.xcconfig` in your local configuration. Keep real
+Mapbox tokens out of git.
 
 ## Running or Using the Project
 
@@ -53,6 +58,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 ## Testing and Verification
 
 - Xcode's test action or `xcodebuild test` with the appropriate scheme and destination
+- `make verify` runs static checks for Mapbox token placeholders, asset
+  references, CocoaPods lock consistency, and Xcode build availability.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 
