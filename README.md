@@ -80,4 +80,4 @@ Keep changes small and tied to the project that is already present in this repos
 
 Prior README summary:
 
-> scavenger-hunt-ios <!-- README-OVERVIEW-IMAGE --> A scavenger hunt proposal app.
+> scavenger-hunt-ios A scavenger hunt proposal app.
