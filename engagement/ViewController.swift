@@ -113,6 +113,12 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MGLMapViewDel
             return nil
         }
 
+        let allowedStyleURLSchemes = ["mapbox", "https"]
+        guard let styleURLScheme = styleURL.scheme?.lowercased(),
+              allowedStyleURLSchemes.contains(styleURLScheme) else {
+            return nil
+        }
+
         return styleURL
     }
 

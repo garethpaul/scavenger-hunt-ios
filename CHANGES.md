@@ -2,6 +2,8 @@
 
 ## 2026-06-09
 
+- Restricted locally configured Mapbox style URLs to `mapbox` or `https`
+  schemes, with static validation for the helper.
 - Added optional local Mapbox style URL configuration and static checks that
   reject checked-in style URLs.
 - Added a shared Xcode scheme, removed tracked developer-local Xcode user

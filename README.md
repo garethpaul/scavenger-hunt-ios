@@ -55,8 +55,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 Set `MAPBOX_ACCESS_TOKEN` in Xcode build settings or include the copied
 `engagement/MapboxSecrets.xcconfig` in your local configuration. Optionally set
 `MAPBOX_STYLE_URL` locally to use a custom Mapbox style; leave it blank to use
-Mapbox's default style. Keep real Mapbox tokens and private style URLs out of
-git.
+Mapbox's default style. Local style URLs are limited to `mapbox` or `https`
+schemes. Keep real Mapbox tokens and private style URLs out of git.
 
 ## Running or Using the Project
 
@@ -81,6 +81,8 @@ git.
   untracked.
 - `make check` also requires optional Mapbox style URLs to come from local
   configuration rather than checked-in Swift or plist values.
+- `make check` also requires configured Mapbox style URLs to use `mapbox` or
+  `https` schemes.
 - The static checker also requires completed canonical plans under `docs/plans`.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
@@ -116,6 +118,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   scheme and workspace portability guard.
 - See `docs/plans/2026-06-09-mapbox-style-url-config.md` for the local Mapbox
   style URL configuration guard.
+- See `docs/plans/2026-06-09-mapbox-style-url-scheme-guard.md` for the Mapbox
+  style URL scheme guard.
 
 ## Contributing
 

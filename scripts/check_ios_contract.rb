@@ -96,6 +96,11 @@ end
 unless view_controller.include?('!trimmedStyleURL.contains("$(")')
   failures << 'ViewController.swift must ignore unresolved MAPBOX_STYLE_URL build placeholders'
 end
+unless view_controller.include?('let allowedStyleURLSchemes = ["mapbox", "https"]') &&
+       view_controller.include?('styleURL.scheme?.lowercased()') &&
+       view_controller.include?('allowedStyleURLSchemes.contains(styleURLScheme)')
+  failures << 'ViewController.swift must restrict configured Mapbox style URLs to mapbox or https schemes'
+end
 if view_controller.match?(/annotation\.title!/)
   failures << 'ViewController.swift must not force unwrap annotation titles'
 end
