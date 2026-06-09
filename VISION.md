@@ -25,6 +25,7 @@ Priority:
 - Enable Mapbox user tracking only after compatible authorization is available
 - Avoid logging precise user coordinates
 - Keep Xcode workspace and scheme metadata portable across machines
+- Keep account-specific Xcode signing teams out of source control
 - Keep completed maintenance plans under `docs/plans`
 - Treat Swift and CocoaPods versions as legacy until documented
 

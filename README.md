@@ -56,7 +56,9 @@ Set `MAPBOX_ACCESS_TOKEN` in Xcode build settings or include the copied
 `engagement/MapboxSecrets.xcconfig` in your local configuration. Optionally set
 `MAPBOX_STYLE_URL` locally to use a custom Mapbox style; leave it blank to use
 Mapbox's default style. Local style URLs are limited to `mapbox` or `https`
-schemes. Keep real Mapbox tokens and private style URLs out of git.
+schemes. Keep real Mapbox tokens and private style URLs out of git. Set your
+Apple development team locally in Xcode when building for a device; the checked
+in project keeps `DEVELOPMENT_TEAM` blank.
 
 ## Running or Using the Project
 
@@ -79,6 +81,8 @@ schemes. Keep real Mapbox tokens and private style URLs out of git.
 - `make check` also verifies the Xcode workspace uses a relative project
   reference, the app scheme is shared, and developer-local `xcuserdata` stays
   untracked.
+- `make check` also verifies that account-specific Xcode signing teams stay out
+  of the checked-in project file.
 - `make check` also requires optional Mapbox style URLs to come from local
   configuration rather than checked-in Swift or plist values.
 - `make check` also requires configured Mapbox style URLs to use `mapbox` or
@@ -120,6 +124,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   style URL configuration guard.
 - See `docs/plans/2026-06-09-mapbox-style-url-scheme-guard.md` for the Mapbox
   style URL scheme guard.
+- See `docs/plans/2026-06-09-local-signing-team-guard.md` for the local Xcode
+  signing-team guard.
 
 ## Contributing
 

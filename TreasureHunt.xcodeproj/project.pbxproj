@@ -610,7 +610,7 @@
 			baseConfigurationReference = 455F8BF7F88D1024F3062A47 /* Pods-engagement.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEVELOPMENT_TEAM = 53AF9EMAN4;
+				DEVELOPMENT_TEAM = "";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/engagement",
@@ -629,7 +629,7 @@
 			baseConfigurationReference = 5624AB58A7EC2C5F02E88F1D /* Pods-engagement.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEVELOPMENT_TEAM = 53AF9EMAN4;
+				DEVELOPMENT_TEAM = "";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/engagement",

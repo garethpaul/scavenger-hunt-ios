@@ -2,6 +2,8 @@
 
 ## 2026-06-09
 
+- Cleared the checked-in Xcode development team and added static validation so
+  signing teams stay local.
 - Restricted locally configured Mapbox style URLs to `mapbox` or `https`
   schemes, with static validation for the helper.
 - Added optional local Mapbox style URL configuration and static checks that
