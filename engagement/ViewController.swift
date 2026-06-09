@@ -42,10 +42,10 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MGLMapViewDel
         mapView.setCenter(CLLocationCoordinate2D(latitude: 37.890576,
                                     longitude: -122.472104),
                                     zoomLevel: 11, animated: false)
-        mapView.userTrackingMode = .follow
         mapView.delegate = self
         
         view.addSubview(mapView)
+        enableUserTrackingIfAuthorized()
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -92,6 +92,15 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MGLMapViewDel
         return true
     }
 
+    private func enableUserTrackingIfAuthorized() {
+        let status = CLLocationManager.authorizationStatus()
+        guard status == .authorizedWhenInUse || status == .authorizedAlways else {
+            return
+        }
+
+        mapView?.userTrackingMode = .follow
+    }
+
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
@@ -101,6 +110,10 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MGLMapViewDel
         guard locations.last != nil else {
             return
         }
+    }
+
+    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+        enableUserTrackingIfAuthorized()
     }
 
 

@@ -68,6 +68,8 @@ Mapbox tokens out of git.
   location authorization before map tracking. It also reports whether an Xcode
   build could be attempted locally.
 - `make check` also rejects precise user-location coordinate logging.
+- `make check` also requires Mapbox user-following mode to be gated on location
+  authorization before tracking starts.
 - `make check` also requires the prize marker to be added only once when the
   view appears repeatedly.
 - The static checker also requires completed canonical plans under `docs/plans`.
@@ -97,6 +99,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   logging privacy guard.
 - See `docs/plans/2026-06-09-single-prize-annotation.md` for the duplicate
   prize-marker guard.
+- See `docs/plans/2026-06-09-authorized-user-tracking.md` for the
+  authorization-gated user-tracking guard.
 
 ## Contributing
 

@@ -63,6 +63,21 @@ end
 unless view_controller.include?('locationManager.requestWhenInUseAuthorization()')
   failures << 'ViewController.swift must request when-in-use location authorization'
 end
+if view_controller.include?('mapView.userTrackingMode = .follow')
+  failures << 'ViewController.swift must not enable Mapbox user tracking before checking authorization'
+end
+unless view_controller.include?('private func enableUserTrackingIfAuthorized()')
+  failures << 'ViewController.swift must define an authorization-gated user tracking helper'
+end
+unless view_controller.include?('CLLocationManager.authorizationStatus()')
+  failures << 'ViewController.swift must read CLLocationManager.authorizationStatus before following the user'
+end
+unless view_controller.include?('func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus)')
+  failures << 'ViewController.swift must retry user tracking when location authorization changes'
+end
+unless view_controller.include?('mapView?.userTrackingMode = .follow')
+  failures << 'ViewController.swift must enable user tracking through optional map access after authorization'
+end
 unless view_controller.include?('let annotationTitle = annotation.title ?? nil')
   failures << 'ViewController.swift must flatten optional Mapbox annotation titles before reuse'
 end

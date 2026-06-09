@@ -2,6 +2,8 @@
 
 ## 2026-06-09
 
+- Gated Mapbox user-following mode on location authorization and added static
+  validation so tracking is retried only after authorization changes.
 - Guarded the prize annotation so repeated view appearances do not add duplicate
   map markers.
 - Extended the iOS contract checker to preserve the single-prize-marker
