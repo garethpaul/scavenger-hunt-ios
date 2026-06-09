@@ -17,7 +17,7 @@
                BlueprintIdentifier = "C365B9CF1DF07A6200E8C8AF"
                BuildableName = "engagement.app"
                BlueprintName = "engagement"
-               ReferencedContainer = "container:engagement.xcodeproj">
+               ReferencedContainer = "container:TreasureHunt.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -35,7 +35,7 @@
                BlueprintIdentifier = "C365B9E31DF07A6200E8C8AF"
                BuildableName = "engagementTests.xctest"
                BlueprintName = "engagementTests"
-               ReferencedContainer = "container:engagement.xcodeproj">
+               ReferencedContainer = "container:TreasureHunt.xcodeproj">
             </BuildableReference>
          </TestableReference>
          <TestableReference
@@ -45,7 +45,7 @@
                BlueprintIdentifier = "C365B9EE1DF07A6200E8C8AF"
                BuildableName = "engagementUITests.xctest"
                BlueprintName = "engagementUITests"
-               ReferencedContainer = "container:engagement.xcodeproj">
+               ReferencedContainer = "container:TreasureHunt.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -55,7 +55,7 @@
             BlueprintIdentifier = "C365B9CF1DF07A6200E8C8AF"
             BuildableName = "engagement.app"
             BlueprintName = "engagement"
-            ReferencedContainer = "container:engagement.xcodeproj">
+            ReferencedContainer = "container:TreasureHunt.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <AdditionalOptions>
@@ -78,7 +78,7 @@
             BlueprintIdentifier = "C365B9CF1DF07A6200E8C8AF"
             BuildableName = "engagement.app"
             BlueprintName = "engagement"
-            ReferencedContainer = "container:engagement.xcodeproj">
+            ReferencedContainer = "container:TreasureHunt.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <AdditionalOptions>
@@ -97,7 +97,7 @@
             BlueprintIdentifier = "C365B9CF1DF07A6200E8C8AF"
             BuildableName = "engagement.app"
             BlueprintName = "engagement"
-            ReferencedContainer = "container:engagement.xcodeproj">
+            ReferencedContainer = "container:TreasureHunt.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

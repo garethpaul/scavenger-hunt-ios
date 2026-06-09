@@ -74,6 +74,9 @@ Mapbox tokens out of git.
   usage-description keys.
 - `make check` also requires the prize marker to be added only once when the
   view appears repeatedly.
+- `make check` also verifies the Xcode workspace uses a relative project
+  reference, the app scheme is shared, and developer-local `xcuserdata` stays
+  untracked.
 - The static checker also requires completed canonical plans under `docs/plans`.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
@@ -105,6 +108,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   authorization-gated user-tracking guard.
 - See `docs/plans/2026-06-09-when-in-use-location-scope.md` for the
   when-in-use location scope guard.
+- See `docs/plans/2026-06-09-shared-xcode-scheme.md` for the shared Xcode
+  scheme and workspace portability guard.
 
 ## Contributing
 

@@ -22,6 +22,7 @@ Priority:
 - Keep location authorization scoped to when-in-use foreground tracking
 - Enable Mapbox user tracking only after compatible authorization is available
 - Avoid logging precise user coordinates
+- Keep Xcode workspace and scheme metadata portable across machines
 - Keep completed maintenance plans under `docs/plans`
 - Treat Swift and CocoaPods versions as legacy until documented
 

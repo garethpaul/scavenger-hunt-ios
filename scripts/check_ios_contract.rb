@@ -41,6 +41,32 @@ unless File.read('engagement/MapboxSecrets.xcconfig.example').include?('replace-
   failures << 'MapboxSecrets.xcconfig.example must contain a placeholder token'
 end
 
+workspace = File.read('engagement.xcworkspace/contents.xcworkspacedata')
+if workspace.include?('/Users/')
+  failures << 'engagement.xcworkspace must not reference a developer-local absolute path'
+end
+unless workspace.include?('location = "group:TreasureHunt.xcodeproj"')
+  failures << 'engagement.xcworkspace must reference TreasureHunt.xcodeproj relative to the workspace'
+end
+
+shared_scheme_path = 'TreasureHunt.xcodeproj/xcshareddata/xcschemes/engagement.xcscheme'
+if File.exist?(shared_scheme_path)
+  shared_scheme = File.read(shared_scheme_path)
+  unless shared_scheme.include?('BuildableName = "engagement.app"') &&
+         shared_scheme.include?('ReferencedContainer = "container:TreasureHunt.xcodeproj"')
+    failures << "#{shared_scheme_path} must define a shared engagement app scheme for TreasureHunt.xcodeproj"
+  end
+else
+  failures << "#{shared_scheme_path} is missing"
+end
+
+tracked_user_state = `git ls-files '*xcuserdata*' '*.xcuserstate'`.split("\n").select do |path|
+  File.exist?(path)
+end
+unless tracked_user_state.empty?
+  failures << "developer-local Xcode user state must not be tracked: #{tracked_user_state.join(', ')}"
+end
+
 view_controller = File.read('engagement/ViewController.swift')
 if view_controller.include?('URL(string: "")')
   failures << 'ViewController.swift must not pass a blank Mapbox style URL'

@@ -2,6 +2,8 @@
 
 ## 2026-06-09
 
+- Added a shared Xcode scheme, removed tracked developer-local Xcode user
+  state, and made the workspace reference the project relatively.
 - Added static privacy checks that reject always-on location authorization
   prompts and plist keys.
 - Gated Mapbox user-following mode on location authorization and added static
