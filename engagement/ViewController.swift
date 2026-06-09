@@ -15,6 +15,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MGLMapViewDel
     let locationManager = CLLocationManager()
     var mapView: MGLMapView!
     var logoView: UIImageView!
+    private var didAddPrizeAnnotation = false
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -50,6 +51,9 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MGLMapViewDel
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
+        guard !didAddPrizeAnnotation else {
+            return
+        }
         
         // Add marker for Hawk Hill
         let hawk = MGLPointAnnotation()
@@ -58,6 +62,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MGLMapViewDel
         hawk.title = "Prize"
         mapView.addAnnotation(hawk)
         mapView.selectAnnotation(hawk, animated: true)
+        didAddPrizeAnnotation = true
         
         
         

@@ -72,6 +72,15 @@ end
 unless view_controller.include?('let reuseIdentifier = annotationTitle ?? imageName')
   failures << 'ViewController.swift must provide a fallback marker reuse identifier'
 end
+unless view_controller.include?('private var didAddPrizeAnnotation = false')
+  failures << 'ViewController.swift must track whether the prize annotation was already added'
+end
+unless view_controller.include?('guard !didAddPrizeAnnotation else')
+  failures << 'ViewController.swift must not add duplicate prize annotations on repeated appearances'
+end
+unless view_controller.include?('didAddPrizeAnnotation = true')
+  failures << 'ViewController.swift must mark the prize annotation as added'
+end
 
 asset_names = Dir['engagement/Assets.xcassets/**/*.imageset'].map { |path| File.basename(path, '.imageset') }
 %w[Logo pin3 BluePin].each do |image_name|

@@ -1,5 +1,12 @@
 # Changes
 
+## 2026-06-09
+
+- Guarded the prize annotation so repeated view appearances do not add duplicate
+  map markers.
+- Extended the iOS contract checker to preserve the single-prize-marker
+  behavior.
+
 ## 2026-06-08
 
 - Removed precise coordinate logging from the location update callback and

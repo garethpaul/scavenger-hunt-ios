@@ -15,6 +15,7 @@ Priority:
 
 - Preserve the proposal/scavenger-hunt map flow
 - Keep the prize annotation and custom pin behavior understandable
+- Keep the prize marker from duplicating across repeated view appearances
 - Keep annotation rendering safe when Mapbox supplies unexpected metadata
 - Avoid committing Mapbox tokens or private style URLs
 - Request visible location authorization before user-location tracking
@@ -51,6 +52,7 @@ user tracking behavior visible.
 - Checked-in Mapbox credentials
 - Silent user-location upload
 - Unexplained private-location changes
+- Duplicate map markers that obscure the intended proposal flow
 - Broad app rewrites without preserving the proposal flow
 
 This list is a roadmap guardrail, not a permanent rule.
