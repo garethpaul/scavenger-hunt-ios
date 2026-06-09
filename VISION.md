@@ -18,6 +18,7 @@ Priority:
 - Keep the prize marker from duplicating across repeated view appearances
 - Keep annotation rendering safe when Mapbox supplies unexpected metadata
 - Avoid committing Mapbox tokens or private style URLs
+- Keep optional Mapbox style URLs in local configuration
 - Request visible location authorization before user-location tracking
 - Keep location authorization scoped to when-in-use foreground tracking
 - Enable Mapbox user tracking only after compatible authorization is available
@@ -30,7 +31,6 @@ Next priorities:
 
 - Add README setup notes for Mapbox credentials and Xcode version
 - Document whether coordinates are fixed, demo-only, or configurable
-- Add a local configuration file template for map style/token values
 - Include simulator verification notes for annotation behavior
 
 Contribution rules:

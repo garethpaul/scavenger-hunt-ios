@@ -38,6 +38,8 @@
 	</array>
 	<key>MGLMapboxAccessToken</key>
 	<string>$(MAPBOX_ACCESS_TOKEN)</string>
+	<key>MAPBOX_STYLE_URL</key>
+	<string>$(MAPBOX_STYLE_URL)</string>
 	<key>MGLMapboxMetricsEnabledSettingShownInApp</key>
 	<true/>
 	<key>NSLocationWhenInUseUsageDescription</key>

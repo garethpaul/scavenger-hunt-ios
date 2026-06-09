@@ -34,7 +34,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MGLMapViewDel
         
         // Setup Mapbox Treasure Map
         
-        let styleURL: URL? = nil
+        let styleURL = configuredMapStyleURL()
         mapView = MGLMapView(frame: view.bounds,
                                  styleURL: styleURL)
         mapView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
@@ -99,6 +99,21 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MGLMapViewDel
         }
 
         mapView?.userTrackingMode = .follow
+    }
+
+    private func configuredMapStyleURL() -> URL? {
+        guard let styleURLString = Bundle.main.object(forInfoDictionaryKey: "MAPBOX_STYLE_URL") as? String else {
+            return nil
+        }
+
+        let trimmedStyleURL = styleURLString.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedStyleURL.isEmpty,
+              !trimmedStyleURL.contains("$("),
+              let styleURL = URL(string: trimmedStyleURL) else {
+            return nil
+        }
+
+        return styleURL
     }
 
     override func didReceiveMemoryWarning() {

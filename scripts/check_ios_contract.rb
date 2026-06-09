@@ -24,6 +24,13 @@ end
 unless info_plist.include?('<string>$(MAPBOX_ACCESS_TOKEN)</string>')
   failures << 'engagement/Info.plist must read MGLMapboxAccessToken from $(MAPBOX_ACCESS_TOKEN)'
 end
+if info_plist.match?(/<string>mapbox:\/\/styles\/[^<]+<\/string>/)
+  failures << 'engagement/Info.plist must not contain a checked-in Mapbox style URL'
+end
+unless info_plist.include?('<key>MAPBOX_STYLE_URL</key>') &&
+       info_plist.include?('<string>$(MAPBOX_STYLE_URL)</string>')
+  failures << 'engagement/Info.plist must read MAPBOX_STYLE_URL from $(MAPBOX_STYLE_URL)'
+end
 if info_plist.include?('NSLocationAlways') ||
    info_plist.include?('NSLocationAlwaysAndWhenInUseUsageDescription')
   failures << 'engagement/Info.plist must not request always-on location authorization'
@@ -39,6 +46,9 @@ unless File.read('.gitignore').include?('engagement/MapboxSecrets.xcconfig')
 end
 unless File.read('engagement/MapboxSecrets.xcconfig.example').include?('replace-with-mapbox-public-token')
   failures << 'MapboxSecrets.xcconfig.example must contain a placeholder token'
+end
+unless File.read('engagement/MapboxSecrets.xcconfig.example').include?('MAPBOX_STYLE_URL =')
+  failures << 'MapboxSecrets.xcconfig.example must expose optional MAPBOX_STYLE_URL configuration'
 end
 
 workspace = File.read('engagement.xcworkspace/contents.xcworkspacedata')
@@ -70,6 +80,21 @@ end
 view_controller = File.read('engagement/ViewController.swift')
 if view_controller.include?('URL(string: "")')
   failures << 'ViewController.swift must not pass a blank Mapbox style URL'
+end
+if view_controller.match?(/mapbox:\/\/styles\//)
+  failures << 'ViewController.swift must not contain a checked-in Mapbox style URL'
+end
+if view_controller.include?('let styleURL: URL? = nil')
+  failures << 'ViewController.swift must resolve Mapbox style URLs from local configuration'
+end
+unless view_controller.include?('private func configuredMapStyleURL() -> URL?')
+  failures << 'ViewController.swift must define an optional Mapbox style URL helper'
+end
+unless view_controller.include?('Bundle.main.object(forInfoDictionaryKey: "MAPBOX_STYLE_URL")')
+  failures << 'ViewController.swift must read MAPBOX_STYLE_URL from Info.plist'
+end
+unless view_controller.include?('!trimmedStyleURL.contains("$(")')
+  failures << 'ViewController.swift must ignore unresolved MAPBOX_STYLE_URL build placeholders'
 end
 if view_controller.match?(/annotation\.title!/)
   failures << 'ViewController.swift must not force unwrap annotation titles'

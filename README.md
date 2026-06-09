@@ -53,8 +53,10 @@ cp engagement/MapboxSecrets.xcconfig.example engagement/MapboxSecrets.xcconfig
 The setup commands above are derived from repository files. Legacy mobile, Python, or JavaScript samples may require older SDKs or package versions than a modern workstation uses by default.
 
 Set `MAPBOX_ACCESS_TOKEN` in Xcode build settings or include the copied
-`engagement/MapboxSecrets.xcconfig` in your local configuration. Keep real
-Mapbox tokens out of git.
+`engagement/MapboxSecrets.xcconfig` in your local configuration. Optionally set
+`MAPBOX_STYLE_URL` locally to use a custom Mapbox style; leave it blank to use
+Mapbox's default style. Keep real Mapbox tokens and private style URLs out of
+git.
 
 ## Running or Using the Project
 
@@ -77,6 +79,8 @@ Mapbox tokens out of git.
 - `make check` also verifies the Xcode workspace uses a relative project
   reference, the app scheme is shared, and developer-local `xcuserdata` stays
   untracked.
+- `make check` also requires optional Mapbox style URLs to come from local
+  configuration rather than checked-in Swift or plist values.
 - The static checker also requires completed canonical plans under `docs/plans`.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
@@ -110,6 +114,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   when-in-use location scope guard.
 - See `docs/plans/2026-06-09-shared-xcode-scheme.md` for the shared Xcode
   scheme and workspace portability guard.
+- See `docs/plans/2026-06-09-mapbox-style-url-config.md` for the local Mapbox
+  style URL configuration guard.
 
 ## Contributing
 
