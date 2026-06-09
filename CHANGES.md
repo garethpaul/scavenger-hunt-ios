@@ -2,6 +2,8 @@
 
 ## 2026-06-09
 
+- Added static privacy checks that reject always-on location authorization
+  prompts and plist keys.
 - Gated Mapbox user-following mode on location authorization and added static
   validation so tracking is retried only after authorization changes.
 - Guarded the prize annotation so repeated view appearances do not add duplicate

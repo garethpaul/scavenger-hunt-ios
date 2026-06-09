@@ -19,6 +19,7 @@ Priority:
 - Keep annotation rendering safe when Mapbox supplies unexpected metadata
 - Avoid committing Mapbox tokens or private style URLs
 - Request visible location authorization before user-location tracking
+- Keep location authorization scoped to when-in-use foreground tracking
 - Enable Mapbox user tracking only after compatible authorization is available
 - Avoid logging precise user coordinates
 - Keep completed maintenance plans under `docs/plans`

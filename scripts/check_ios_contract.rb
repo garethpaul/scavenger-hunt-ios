@@ -24,6 +24,10 @@ end
 unless info_plist.include?('<string>$(MAPBOX_ACCESS_TOKEN)</string>')
   failures << 'engagement/Info.plist must read MGLMapboxAccessToken from $(MAPBOX_ACCESS_TOKEN)'
 end
+if info_plist.include?('NSLocationAlways') ||
+   info_plist.include?('NSLocationAlwaysAndWhenInUseUsageDescription')
+  failures << 'engagement/Info.plist must not request always-on location authorization'
+end
 if info_plist.include?('<key>MGLMapboxMetricsEnabledSettingShownInApp </key>')
   failures << 'MGLMapboxMetricsEnabledSettingShownInApp key must not contain trailing whitespace'
 end
@@ -62,6 +66,9 @@ unless view_controller.include?('locationManager.delegate = self')
 end
 unless view_controller.include?('locationManager.requestWhenInUseAuthorization()')
   failures << 'ViewController.swift must request when-in-use location authorization'
+end
+if view_controller.include?('requestAlwaysAuthorization()')
+  failures << 'ViewController.swift must not request always-on location authorization'
 end
 if view_controller.include?('mapView.userTrackingMode = .follow')
   failures << 'ViewController.swift must not enable Mapbox user tracking before checking authorization'
