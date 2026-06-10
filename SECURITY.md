@@ -37,6 +37,8 @@ Helpful reports include:
   permission.
 - The vendored Mapbox executable is covered by `VENDORED_FRAMEWORKS.sha256`;
   digest changes require explicit review and do not imply current SDK support.
+- Locally configured style URLs must include the expected Mapbox styles
+  authority or a non-empty HTTPS host.
 
 ## Mobile Privacy Notes
 

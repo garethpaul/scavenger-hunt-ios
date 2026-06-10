@@ -86,7 +86,7 @@ in project keeps `DEVELOPMENT_TEAM` blank.
 - `make check` also requires optional Mapbox style URLs to come from local
   configuration rather than checked-in Swift or plist values.
 - `make check` also requires configured Mapbox style URLs to use `mapbox` or
-  `https` schemes.
+  `https` schemes with valid scheme-specific authorities.
 - GitHub Actions runs the same static `make check` baseline with Ruby 3.3,
   Node 24-compatible pinned actions, read-only permissions, and a timeout.
 - `VENDORED_FRAMEWORKS.sha256` verifies the checked-in Mapbox framework binary.
@@ -135,6 +135,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   baseline.
 - See `docs/plans/2026-06-10-vendored-framework-integrity.md` for the Mapbox
   binary integrity and explicit legacy-build boundary.
+- See `docs/plans/2026-06-10-mapbox-style-url-authority.md` for configured
+  style URL authority validation.
 
 ## Contributing
 

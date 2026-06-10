@@ -167,6 +167,12 @@ unless view_controller.include?('let allowedStyleURLSchemes = ["mapbox", "https"
        view_controller.include?('allowedStyleURLSchemes.contains(styleURLScheme)')
   failures << 'ViewController.swift must restrict configured Mapbox style URLs to mapbox or https schemes'
 end
+unless view_controller.include?('styleURL.host?.lowercased() == "styles"')
+  failures << 'ViewController.swift must require the styles authority for mapbox style URLs'
+end
+unless view_controller.include?('guard let styleURLHost = styleURL.host, !styleURLHost.isEmpty')
+  failures << 'ViewController.swift must require a host for https style URLs'
+end
 if view_controller.match?(/annotation\.title!/)
   failures << 'ViewController.swift must not force unwrap annotation titles'
 end
