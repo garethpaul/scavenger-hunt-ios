@@ -4,6 +4,9 @@
 
 - Added a least-privilege GitHub Actions workflow that installs Ruby 3.3 and
   runs the static `make check` baseline with pinned Node 24-compatible actions.
+- Added SHA-256 integrity coverage for the vendored Mapbox framework binary.
+- Made legacy Xcode compilation explicit and fixed hosted validation to Ubuntu
+  24.04 with concurrency cancellation.
 
 ## 2026-06-09
 

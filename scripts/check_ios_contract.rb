@@ -2,6 +2,10 @@
 # frozen_string_literal: true
 
 require 'json'
+require 'digest'
+
+ROOT = File.expand_path('..', __dir__)
+Dir.chdir(ROOT)
 
 failures = []
 
@@ -9,9 +13,11 @@ docs_plans = Dir['docs/plans/*.md'].sort
 canonical_plan = 'docs/plans/2026-06-08-scavenger-hunt-ios-baseline.md'
 signing_team_plan = 'docs/plans/2026-06-09-local-signing-team-guard.md'
 ci_plan = 'docs/plans/2026-06-10-ci-baseline.md'
+vendored_framework_plan = 'docs/plans/2026-06-10-vendored-framework-integrity.md'
 failures << "#{canonical_plan} is missing" unless File.exist?(canonical_plan)
 failures << "#{signing_team_plan} is missing" unless File.exist?(signing_team_plan)
 failures << "#{ci_plan} is missing" unless File.exist?(ci_plan)
+failures << "#{vendored_framework_plan} is missing" unless File.exist?(vendored_framework_plan)
 failures << 'docs/plans must contain at least one completed plan' if docs_plans.empty?
 
 docs_plans.each do |plan_path|
@@ -92,12 +98,43 @@ workflow = File.exist?('.github/workflows/check.yml') ? File.read('.github/workf
 unless workflow.include?('actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10') &&
        workflow.include?('ruby/setup-ruby@12fd324f1d0b43274fdc8130f6980590a667c455') &&
        workflow.include?('ruby-version: "3.3"') &&
+       workflow.include?('runs-on: ubuntu-24.04') &&
+       workflow.include?('concurrency:') &&
+       workflow.include?('cancel-in-progress: true') &&
        workflow.include?('permissions:') &&
        workflow.include?('contents: read') &&
        workflow.include?('timeout-minutes: 5') &&
        workflow.include?('workflow_dispatch:') &&
        workflow.include?('run: make check')
   failures << 'GitHub Actions workflow must keep the pinned, least-privilege Ruby 3.3 check baseline'
+end
+workflow.scan(/^\s*uses:\s*([^@\s]+)@([^\s#]+)/).each do |action, revision|
+  unless revision.match?(/\A[a-f0-9]{40}\z/)
+    failures << "GitHub Actions action #{action} must be pinned to a full commit SHA"
+  end
+end
+
+makefile = File.read('Makefile')
+unless makefile.include?('RUN_LEGACY_XCODE ?= 0') &&
+       makefile.include?('xcodebuild is required when RUN_LEGACY_XCODE=1') &&
+       makefile.include?('legacy Xcode build skipped')
+  failures << 'Makefile must keep legacy Xcode compilation explicit and opt-in'
+end
+
+framework_manifest = 'VENDORED_FRAMEWORKS.sha256'
+framework_binary = 'Pods/Mapbox-iOS-SDK/dynamic/Mapbox.framework/Mapbox'
+if File.exist?(framework_manifest)
+  line = File.read(framework_manifest).strip
+  match = line.match(/\A([a-f0-9]{64})  (Pods\/Mapbox-iOS-SDK\/dynamic\/Mapbox\.framework\/Mapbox)\z/)
+  if match.nil?
+    failures << "#{framework_manifest} must contain the Mapbox framework SHA-256 entry"
+  elsif !File.exist?(framework_binary)
+    failures << "#{framework_binary} is missing"
+  elsif Digest::SHA256.file(framework_binary).hexdigest != match[1]
+    failures << "#{framework_binary} does not match its checked-in SHA-256 digest"
+  end
+else
+  failures << "#{framework_manifest} is missing"
 end
 
 %w[README.md VISION.md SECURITY.md CHANGES.md].each do |doc_path|

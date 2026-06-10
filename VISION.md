@@ -28,6 +28,7 @@ Priority:
 - Keep account-specific Xcode signing teams out of source control
 - Keep completed maintenance plans under `docs/plans`
 - Keep GitHub Actions running the static `make check` baseline
+- Keep the vendored Mapbox framework covered by a reviewed SHA-256 digest
 - Treat Swift and CocoaPods versions as legacy until documented
 
 Next priorities:

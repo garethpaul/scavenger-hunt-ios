@@ -35,6 +35,8 @@ Helpful reports include:
   hosted path free of private Mapbox tokens or signing teams.
 - CI actions stay pinned by commit and run with read-only repository contents
   permission.
+- The vendored Mapbox executable is covered by `VENDORED_FRAMEWORKS.sha256`;
+  digest changes require explicit review and do not imply current SDK support.
 
 ## Mobile Privacy Notes
 

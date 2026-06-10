@@ -89,6 +89,9 @@ in project keeps `DEVELOPMENT_TEAM` blank.
   `https` schemes.
 - GitHub Actions runs the same static `make check` baseline with Ruby 3.3,
   Node 24-compatible pinned actions, read-only permissions, and a timeout.
+- `VENDORED_FRAMEWORKS.sha256` verifies the checked-in Mapbox framework binary.
+- Legacy Xcode compilation is opt-in with `RUN_LEGACY_XCODE=1`; the default gate
+  does not claim modern Xcode compatibility for the archived project.
 - The static checker also requires completed canonical plans under `docs/plans`.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
@@ -130,6 +133,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   signing-team guard.
 - See `docs/plans/2026-06-10-ci-baseline.md` for the GitHub Actions static
   baseline.
+- See `docs/plans/2026-06-10-vendored-framework-integrity.md` for the Mapbox
+  binary integrity and explicit legacy-build boundary.
 
 ## Contributing
 
