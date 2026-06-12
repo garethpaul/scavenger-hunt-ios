@@ -93,6 +93,8 @@ in project keeps `DEVELOPMENT_TEAM` blank.
   of the checked-in project file.
 - `make check` also requires optional Mapbox style URLs to come from local
   configuration rather than checked-in Swift or plist values.
+- `make check` scans tracked non-vendored files for both public and secret
+  Mapbox token formats while allowing the local placeholder template.
 - `make check` also requires configured Mapbox style URLs to use `mapbox` or
   `https` schemes with valid scheme-specific authorities.
 - GitHub Actions runs the same static `make check` baseline with Ruby 3.3,
@@ -148,6 +150,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   style URL authority validation.
 - See `docs/plans/2026-06-12-location-authorization-transitions.md` for the
   status-driven tracking transition contract.
+- See `docs/plans/2026-06-12-mapbox-secret-token-guard.md` for the tracked
+  Mapbox token formats guard and historical-alert boundary.
 
 ## Contributing
 

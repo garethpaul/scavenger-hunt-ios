@@ -32,6 +32,7 @@ Priority:
 - Keep completed maintenance plans under `docs/plans`
 - Keep GitHub Actions running the static `make check` baseline
 - Keep the vendored Mapbox framework covered by a reviewed SHA-256 digest
+- Reject public and secret Mapbox token formats from tracked non-vendored files
 - Treat Swift and CocoaPods versions as legacy until documented
 
 Next priorities:

@@ -41,6 +41,9 @@ Helpful reports include:
   authority or a non-empty HTTPS host.
 - Each location authorization transition must apply the delegate-provided
   status directly and disable Mapbox follow mode when permission is unavailable.
+- Tracked non-vendored files are checked for public and secret Mapbox token formats;
+  the historical secret-scanning alert still requires credential-owner
+  revocation evidence before resolution.
 
 ## Mobile Privacy Notes
 

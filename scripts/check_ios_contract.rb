@@ -38,11 +38,13 @@ signing_team_plan = 'docs/plans/2026-06-09-local-signing-team-guard.md'
 ci_plan = 'docs/plans/2026-06-10-ci-baseline.md'
 vendored_framework_plan = 'docs/plans/2026-06-10-vendored-framework-integrity.md'
 authorization_transition_plan = 'docs/plans/2026-06-12-location-authorization-transitions.md'
+mapbox_token_guard_plan = 'docs/plans/2026-06-12-mapbox-secret-token-guard.md'
 failures << "#{canonical_plan} is missing" unless File.exist?(canonical_plan)
 failures << "#{signing_team_plan} is missing" unless File.exist?(signing_team_plan)
 failures << "#{ci_plan} is missing" unless File.exist?(ci_plan)
 failures << "#{vendored_framework_plan} is missing" unless File.exist?(vendored_framework_plan)
 failures << "#{authorization_transition_plan} is missing" unless File.exist?(authorization_transition_plan)
+failures << "#{mapbox_token_guard_plan} is missing" unless File.exist?(mapbox_token_guard_plan)
 failures << 'docs/plans must contain at least one completed plan' if docs_plans.empty?
 
 docs_plans.each do |plan_path|
@@ -84,6 +86,33 @@ unless File.read('engagement/MapboxSecrets.xcconfig.example').include?('replace-
 end
 unless File.read('engagement/MapboxSecrets.xcconfig.example').include?('MAPBOX_STYLE_URL =')
   failures << 'MapboxSecrets.xcconfig.example must expose optional MAPBOX_STYLE_URL configuration'
+end
+
+tracked_files_output, tracked_files_error, tracked_files_status = Open3.capture3('git', 'ls-files', '-z')
+if tracked_files_status.success?
+  mapbox_token_pattern = /(?<![A-Za-z0-9])(?:pk|sk)\.[A-Za-z0-9._-]{20,}/
+  tracked_files_output.split("\0").each do |path|
+    next if path.start_with?('Pods/') || !File.file?(path)
+
+    contents = File.binread(path)
+    if contents.match?(mapbox_token_pattern)
+      failures << "#{path} must not contain a checked-in Mapbox token"
+    end
+  end
+else
+  failures << "unable to scan tracked files for Mapbox tokens: #{tracked_files_error.strip}"
+end
+
+checker_source = File.read(__FILE__)
+[
+  ['(?:pk|', 'sk)\\.'].join,
+  ["Open3.capture3('git', '", "ls-files', '-z')"].join,
+  ["path.start_with?('", "Pods/')"].join,
+  ['File.bin', 'read(path)'].join,
+  ['contents.match?(', 'mapbox_token_pattern)'].join,
+  ['must not contain a checked-in ', 'Mapbox token'].join
+].each do |fragment|
+  failures << "#{__FILE__} must retain Mapbox token guard fragment #{fragment.inspect}" unless checker_source.include?(fragment)
 end
 
 workspace = File.read('engagement.xcworkspace/contents.xcworkspacedata')
@@ -203,6 +232,9 @@ end
   end
   unless document.include?('authorization transition')
     failures << "#{doc_path} must document the location authorization transition contract"
+  end
+  unless document.include?('Mapbox token formats')
+    failures << "#{doc_path} must document the tracked Mapbox token format guard"
   end
 end
 

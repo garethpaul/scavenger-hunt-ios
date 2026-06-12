@@ -4,6 +4,8 @@
 
 - Made each location authorization transition consume its delegate-provided
   status and reset Mapbox follow mode after denial or revocation.
+- Added a tracked-file guard for public and secret Mapbox token formats without
+  exposing matched values in checker output.
 
 ## 2026-06-10
 
