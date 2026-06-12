@@ -79,6 +79,9 @@ in project keeps `DEVELOPMENT_TEAM` blank.
 - `make check` also rejects precise user-location coordinate logging.
 - `make check` also requires Mapbox user-following mode to be gated on location
   authorization before tracking starts.
+- `make check` also requires each location authorization transition to consume
+  the delegate-provided status and stop Mapbox follow mode after denial or
+  revocation.
 - `make check` also rejects always-on location authorization prompts and plist
   usage-description keys.
 - `make check` also requires the prize marker to be added only once when the
@@ -143,6 +146,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   binary integrity and explicit legacy-build boundary.
 - See `docs/plans/2026-06-10-mapbox-style-url-authority.md` for configured
   style URL authority validation.
+- See `docs/plans/2026-06-12-location-authorization-transitions.md` for the
+  status-driven tracking transition contract.
 
 ## Contributing
 

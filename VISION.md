@@ -24,6 +24,8 @@ Priority:
 - Request visible location authorization before user-location tracking
 - Keep location authorization scoped to when-in-use foreground tracking
 - Enable Mapbox user tracking only after compatible authorization is available
+- Keep each location authorization transition status-driven and revoke follow
+  mode when permission becomes unavailable
 - Avoid logging precise user coordinates
 - Keep Xcode workspace and scheme metadata portable across machines
 - Keep account-specific Xcode signing teams out of source control

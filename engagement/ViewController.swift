@@ -45,7 +45,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MGLMapViewDel
         mapView.delegate = self
         
         view.addSubview(mapView)
-        enableUserTrackingIfAuthorized()
+        updateUserTracking(for: CLLocationManager.authorizationStatus())
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -92,13 +92,13 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MGLMapViewDel
         return true
     }
 
-    private func enableUserTrackingIfAuthorized() {
-        let status = CLLocationManager.authorizationStatus()
-        guard status == .authorizedWhenInUse || status == .authorizedAlways else {
-            return
+    private func updateUserTracking(for status: CLAuthorizationStatus) {
+        switch status {
+        case .authorizedWhenInUse, .authorizedAlways:
+            mapView?.userTrackingMode = .follow
+        default:
+            mapView?.userTrackingMode = .none
         }
-
-        mapView?.userTrackingMode = .follow
     }
 
     private func configuredMapStyleURL() -> URL? {
@@ -144,7 +144,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MGLMapViewDel
     }
 
     func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
-        enableUserTrackingIfAuthorized()
+        updateUserTracking(for: status)
     }
 
 

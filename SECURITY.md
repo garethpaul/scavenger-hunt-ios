@@ -39,6 +39,8 @@ Helpful reports include:
   digest changes require explicit review and do not imply current SDK support.
 - Locally configured style URLs must include the expected Mapbox styles
   authority or a non-empty HTTPS host.
+- Each location authorization transition must apply the delegate-provided
+  status directly and disable Mapbox follow mode when permission is unavailable.
 
 ## Mobile Privacy Notes
 

@@ -1,5 +1,10 @@
 # Changes
 
+## 2026-06-12
+
+- Made each location authorization transition consume its delegate-provided
+  status and reset Mapbox follow mode after denial or revocation.
+
 ## 2026-06-10
 
 - Required scheme-appropriate authorities for locally configured Mapbox and

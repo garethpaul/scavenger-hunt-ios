@@ -37,10 +37,12 @@ canonical_plan = 'docs/plans/2026-06-08-scavenger-hunt-ios-baseline.md'
 signing_team_plan = 'docs/plans/2026-06-09-local-signing-team-guard.md'
 ci_plan = 'docs/plans/2026-06-10-ci-baseline.md'
 vendored_framework_plan = 'docs/plans/2026-06-10-vendored-framework-integrity.md'
+authorization_transition_plan = 'docs/plans/2026-06-12-location-authorization-transitions.md'
 failures << "#{canonical_plan} is missing" unless File.exist?(canonical_plan)
 failures << "#{signing_team_plan} is missing" unless File.exist?(signing_team_plan)
 failures << "#{ci_plan} is missing" unless File.exist?(ci_plan)
 failures << "#{vendored_framework_plan} is missing" unless File.exist?(vendored_framework_plan)
+failures << "#{authorization_transition_plan} is missing" unless File.exist?(authorization_transition_plan)
 failures << 'docs/plans must contain at least one completed plan' if docs_plans.empty?
 
 docs_plans.each do |plan_path|
@@ -195,8 +197,12 @@ else
 end
 
 %w[README.md VISION.md SECURITY.md CHANGES.md].each do |doc_path|
-  unless File.read(doc_path).include?('GitHub Actions')
+  document = File.read(doc_path)
+  unless document.include?('GitHub Actions')
     failures << "#{doc_path} must document the GitHub Actions baseline"
+  end
+  unless document.include?('authorization transition')
+    failures << "#{doc_path} must document the location authorization transition contract"
   end
 end
 
@@ -258,17 +264,27 @@ end
 if view_controller.include?('mapView.userTrackingMode = .follow')
   failures << 'ViewController.swift must not enable Mapbox user tracking before checking authorization'
 end
-unless view_controller.include?('private func enableUserTrackingIfAuthorized()')
-  failures << 'ViewController.swift must define an authorization-gated user tracking helper'
+unless view_controller.include?('private func updateUserTracking(for status: CLAuthorizationStatus)')
+  failures << 'ViewController.swift must define a status-driven user tracking helper'
 end
-unless view_controller.include?('CLLocationManager.authorizationStatus()')
-  failures << 'ViewController.swift must read CLLocationManager.authorizationStatus before following the user'
+unless view_controller.include?('updateUserTracking(for: CLLocationManager.authorizationStatus())')
+  failures << 'ViewController.swift must initialize tracking from the current authorization status'
 end
-unless view_controller.include?('func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus)')
-  failures << 'ViewController.swift must retry user tracking when location authorization changes'
+unless view_controller.match?(/func locationManager\(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus\)\s*\{\s*updateUserTracking\(for: status\)\s*\}/m)
+  failures << 'ViewController.swift must apply the delegate-provided authorization status'
+end
+unless view_controller.include?('case .authorizedWhenInUse, .authorizedAlways:') &&
+       view_controller.include?('default:')
+  failures << 'ViewController.swift must distinguish authorized and non-authorized tracking states'
 end
 unless view_controller.include?('mapView?.userTrackingMode = .follow')
   failures << 'ViewController.swift must enable user tracking through optional map access after authorization'
+end
+unless view_controller.include?('mapView?.userTrackingMode = .none')
+  failures << 'ViewController.swift must stop user tracking when authorization is unavailable'
+end
+if view_controller.include?('enableUserTrackingIfAuthorized')
+  failures << 'ViewController.swift must not retain the global-status reread helper'
 end
 unless view_controller.include?('let annotationTitle = annotation.title ?? nil')
   failures << 'ViewController.swift must flatten optional Mapbox annotation titles before reuse'
