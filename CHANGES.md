@@ -2,8 +2,14 @@
 
 ## 2026-06-10
 
-- Added a GitHub Actions workflow that installs Ruby 3.3 and runs the static
-  `make check` baseline for pushes and pull requests.
+- Required scheme-appropriate authorities for locally configured Mapbox and
+  HTTPS style URLs.
+- Added a least-privilege GitHub Actions workflow that installs Ruby 3.3 and
+  runs the static `make check` baseline with pinned Node 24-compatible actions
+  and disabled checkout credential persistence.
+- Added SHA-256 integrity coverage for the vendored Mapbox framework binary.
+- Made legacy Xcode compilation explicit and fixed hosted validation to Ubuntu
+  24.04 with concurrency cancellation.
 
 ## 2026-06-09
 

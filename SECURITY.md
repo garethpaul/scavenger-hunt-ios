@@ -33,6 +33,12 @@ Helpful reports include:
   rather than committed to the shared project file.
 - GitHub Actions runs the static `make check` baseline with Ruby 3.3; keep that
   hosted path free of private Mapbox tokens or signing teams.
+- CI actions stay pinned by commit and run with read-only repository contents
+  permission, while checkout credential persistence stays disabled.
+- The vendored Mapbox executable is covered by `VENDORED_FRAMEWORKS.sha256`;
+  digest changes require explicit review and do not imply current SDK support.
+- Locally configured style URLs must include the expected Mapbox styles
+  authority or a non-empty HTTPS host.
 
 ## Mobile Privacy Notes
 

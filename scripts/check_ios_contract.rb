@@ -2,6 +2,33 @@
 # frozen_string_literal: true
 
 require 'json'
+require 'digest'
+require 'open3'
+require 'yaml'
+
+ROOT = File.expand_path('..', __dir__)
+Dir.chdir(ROOT)
+
+def duplicate_yaml_keys(node, path = [], duplicates = [])
+  case node
+  when Psych::Nodes::Mapping
+    seen = {}
+    node.children.each_slice(2) do |key_node, value_node|
+      key = key_node.value
+      duplicates << (path + [key]).join('.') if seen[key]
+      seen[key] = true
+      duplicate_yaml_keys(value_node, path + [key], duplicates)
+    end
+  when Psych::Nodes::Sequence
+    node.children.each_with_index do |child, index|
+      duplicate_yaml_keys(child, path + [index.to_s], duplicates)
+    end
+  else
+    Array(node.children).each { |child| duplicate_yaml_keys(child, path, duplicates) } if node.respond_to?(:children)
+  end
+
+  duplicates
+end
 
 failures = []
 
@@ -9,9 +36,11 @@ docs_plans = Dir['docs/plans/*.md'].sort
 canonical_plan = 'docs/plans/2026-06-08-scavenger-hunt-ios-baseline.md'
 signing_team_plan = 'docs/plans/2026-06-09-local-signing-team-guard.md'
 ci_plan = 'docs/plans/2026-06-10-ci-baseline.md'
+vendored_framework_plan = 'docs/plans/2026-06-10-vendored-framework-integrity.md'
 failures << "#{canonical_plan} is missing" unless File.exist?(canonical_plan)
 failures << "#{signing_team_plan} is missing" unless File.exist?(signing_team_plan)
 failures << "#{ci_plan} is missing" unless File.exist?(ci_plan)
+failures << "#{vendored_framework_plan} is missing" unless File.exist?(vendored_framework_plan)
 failures << 'docs/plans must contain at least one completed plan' if docs_plans.empty?
 
 docs_plans.each do |plan_path|
@@ -74,11 +103,16 @@ else
   failures << "#{shared_scheme_path} is missing"
 end
 
-tracked_user_state = `git ls-files '*xcuserdata*' '*.xcuserstate'`.split("\n").select do |path|
-  File.exist?(path)
-end
-unless tracked_user_state.empty?
-  failures << "developer-local Xcode user state must not be tracked: #{tracked_user_state.join(', ')}"
+tracked_user_state_output, tracked_user_state_error, tracked_user_state_status = Open3.capture3(
+  'git', 'ls-files', '*xcuserdata*', '*.xcuserstate'
+)
+if tracked_user_state_status.success?
+  tracked_user_state = tracked_user_state_output.split("\n").select { |path| File.exist?(path) }
+  unless tracked_user_state.empty?
+    failures << "developer-local Xcode user state must not be tracked: #{tracked_user_state.join(', ')}"
+  end
+else
+  failures << "unable to inspect tracked Xcode user state: #{tracked_user_state_error.strip}"
 end
 
 project_file = File.read('TreasureHunt.xcodeproj/project.pbxproj')
@@ -88,11 +122,76 @@ project_file.scan(/DEVELOPMENT_TEAM = ([^;]+);/).flatten.each do |team|
   end
 end
 
-workflow = File.exist?('.github/workflows/check.yml') ? File.read('.github/workflows/check.yml') : ''
-unless workflow.include?('ruby/setup-ruby@v1') &&
-       workflow.include?('ruby-version: "3.3"') &&
-       workflow.include?('make check')
-  failures << 'GitHub Actions workflow must install Ruby 3.3 and run make check'
+workflow_path = '.github/workflows/check.yml'
+workflow = File.exist?(workflow_path) ? File.read(workflow_path) : ''
+expected_workflow = {
+  'name' => 'Check',
+  'on' => {
+    'pull_request' => nil,
+    'push' => { 'branches' => ['master'] },
+    'workflow_dispatch' => nil
+  },
+  'permissions' => { 'contents' => 'read' },
+  'concurrency' => {
+    'group' => 'check-${{ github.workflow }}-${{ github.ref }}',
+    'cancel-in-progress' => true
+  },
+  'jobs' => {
+    'check' => {
+      'runs-on' => 'ubuntu-24.04',
+      'timeout-minutes' => 5,
+      'steps' => [
+        {
+          'name' => 'Check out repository',
+          'uses' => 'actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10',
+          'with' => { 'persist-credentials' => false }
+        },
+        {
+          'name' => 'Set up Ruby',
+          'uses' => 'ruby/setup-ruby@12fd324f1d0b43274fdc8130f6980590a667c455',
+          'with' => { 'ruby-version' => '3.3' }
+        },
+        {
+          'name' => 'Run static contract',
+          'run' => 'make check'
+        }
+      ]
+    }
+  }
+}
+
+begin
+  workflow_config = YAML.safe_load(workflow, aliases: false)
+  workflow_config['on'] = workflow_config.delete(true) if workflow_config.is_a?(Hash) && workflow_config.key?(true)
+  failures << 'GitHub Actions workflow must keep the exact pinned, least-privilege Ruby 3.3 check baseline' unless workflow_config == expected_workflow
+
+  duplicate_keys = duplicate_yaml_keys(Psych.parse_stream(workflow))
+  failures << "GitHub Actions workflow contains duplicate YAML keys: #{duplicate_keys.join(', ')}" unless duplicate_keys.empty?
+rescue Psych::Exception => e
+  failures << "GitHub Actions workflow must be valid YAML: #{e.message}"
+end
+
+makefile = File.read('Makefile')
+unless makefile.include?('RUN_LEGACY_XCODE ?= 0') &&
+       makefile.include?('xcodebuild is required when RUN_LEGACY_XCODE=1') &&
+       makefile.include?('legacy Xcode build skipped')
+  failures << 'Makefile must keep legacy Xcode compilation explicit and opt-in'
+end
+
+framework_manifest = 'VENDORED_FRAMEWORKS.sha256'
+framework_binary = 'Pods/Mapbox-iOS-SDK/dynamic/Mapbox.framework/Mapbox'
+if File.exist?(framework_manifest)
+  line = File.read(framework_manifest).strip
+  match = line.match(/\A([a-f0-9]{64})  (Pods\/Mapbox-iOS-SDK\/dynamic\/Mapbox\.framework\/Mapbox)\z/)
+  if match.nil?
+    failures << "#{framework_manifest} must contain the Mapbox framework SHA-256 entry"
+  elsif !File.exist?(framework_binary)
+    failures << "#{framework_binary} is missing"
+  elsif Digest::SHA256.file(framework_binary).hexdigest != match[1]
+    failures << "#{framework_binary} does not match its checked-in SHA-256 digest"
+  end
+else
+  failures << "#{framework_manifest} is missing"
 end
 
 %w[README.md VISION.md SECURITY.md CHANGES.md].each do |doc_path|
@@ -124,6 +223,12 @@ unless view_controller.include?('let allowedStyleURLSchemes = ["mapbox", "https"
        view_controller.include?('styleURL.scheme?.lowercased()') &&
        view_controller.include?('allowedStyleURLSchemes.contains(styleURLScheme)')
   failures << 'ViewController.swift must restrict configured Mapbox style URLs to mapbox or https schemes'
+end
+unless view_controller.include?('styleURL.host?.lowercased() == "styles"')
+  failures << 'ViewController.swift must require the styles authority for mapbox style URLs'
+end
+unless view_controller.include?('guard let styleURLHost = styleURL.host, !styleURLHost.isEmpty')
+  failures << 'ViewController.swift must require a host for https style URLs'
 end
 if view_controller.match?(/annotation\.title!/)
   failures << 'ViewController.swift must not force unwrap annotation titles'

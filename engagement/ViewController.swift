@@ -119,6 +119,16 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MGLMapViewDel
             return nil
         }
 
+        if styleURLScheme == "mapbox" {
+            guard styleURL.host?.lowercased() == "styles" else {
+                return nil
+            }
+        } else {
+            guard let styleURLHost = styleURL.host, !styleURLHost.isEmpty else {
+                return nil
+            }
+        }
+
         return styleURL
     }
 
