@@ -92,6 +92,8 @@ in project keeps `DEVELOPMENT_TEAM` blank.
   configuration rather than checked-in Swift or plist values.
 - `make check` also requires configured Mapbox style URLs to use `mapbox` or
   `https` schemes.
+- GitHub Actions runs the same static `make check` baseline with Ruby 3.3 for
+  pushes and pull requests.
 - The static checker also requires completed canonical plans under `docs/plans`.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
@@ -131,6 +133,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   style URL scheme guard.
 - See `docs/plans/2026-06-09-local-signing-team-guard.md` for the local Xcode
   signing-team guard.
+- See `docs/plans/2026-06-10-ci-baseline.md` for the GitHub Actions static
+  baseline.
 
 ## Contributing
 

@@ -8,8 +8,10 @@ failures = []
 docs_plans = Dir['docs/plans/*.md'].sort
 canonical_plan = 'docs/plans/2026-06-08-scavenger-hunt-ios-baseline.md'
 signing_team_plan = 'docs/plans/2026-06-09-local-signing-team-guard.md'
+ci_plan = 'docs/plans/2026-06-10-ci-baseline.md'
 failures << "#{canonical_plan} is missing" unless File.exist?(canonical_plan)
 failures << "#{signing_team_plan} is missing" unless File.exist?(signing_team_plan)
+failures << "#{ci_plan} is missing" unless File.exist?(ci_plan)
 failures << 'docs/plans must contain at least one completed plan' if docs_plans.empty?
 
 docs_plans.each do |plan_path|
@@ -83,6 +85,19 @@ project_file = File.read('TreasureHunt.xcodeproj/project.pbxproj')
 project_file.scan(/DEVELOPMENT_TEAM = ([^;]+);/).flatten.each do |team|
   unless team.delete('"').strip.empty?
     failures << 'TreasureHunt.xcodeproj must leave DEVELOPMENT_TEAM blank for local signing configuration'
+  end
+end
+
+workflow = File.exist?('.github/workflows/check.yml') ? File.read('.github/workflows/check.yml') : ''
+unless workflow.include?('ruby/setup-ruby@v1') &&
+       workflow.include?('ruby-version: "3.3"') &&
+       workflow.include?('make check')
+  failures << 'GitHub Actions workflow must install Ruby 3.3 and run make check'
+end
+
+%w[README.md VISION.md SECURITY.md CHANGES.md].each do |doc_path|
+  unless File.read(doc_path).include?('GitHub Actions')
+    failures << "#{doc_path} must document the GitHub Actions baseline"
   end
 end
 

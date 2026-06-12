@@ -1,5 +1,10 @@
 # Changes
 
+## 2026-06-10
+
+- Added a GitHub Actions workflow that installs Ruby 3.3 and runs the static
+  `make check` baseline for pushes and pull requests.
+
 ## 2026-06-09
 
 - Cleared the checked-in Xcode development team and added static validation so

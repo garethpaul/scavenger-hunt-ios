@@ -31,6 +31,8 @@ Helpful reports include:
 - Dependency manifests detected: Podfile, Podfile.lock. Dependency updates should preserve lockfiles when present and avoid introducing packages without a clear maintenance reason.
 - Xcode signing teams are account-specific and should be configured locally
   rather than committed to the shared project file.
+- GitHub Actions runs the static `make check` baseline with Ruby 3.3; keep that
+  hosted path free of private Mapbox tokens or signing teams.
 
 ## Mobile Privacy Notes
 

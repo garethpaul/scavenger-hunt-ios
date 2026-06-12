@@ -27,6 +27,7 @@ Priority:
 - Keep Xcode workspace and scheme metadata portable across machines
 - Keep account-specific Xcode signing teams out of source control
 - Keep completed maintenance plans under `docs/plans`
+- Keep GitHub Actions running the static `make check` baseline
 - Treat Swift and CocoaPods versions as legacy until documented
 
 Next priorities:
