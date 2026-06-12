@@ -21,6 +21,8 @@ Priority:
 - Keep optional Mapbox style URLs in local configuration
 - Keep configured Mapbox style URLs limited to expected schemes
 - Keep configured style URLs bound to valid scheme-specific authorities
+- Keep Mapbox style URL credentials and token query parameters out of style
+  configuration, with complete owner/style paths for Mapbox-scheme URLs
 - Request visible location authorization before user-location tracking
 - Keep location authorization scoped to when-in-use foreground tracking
 - Enable Mapbox user tracking only after compatible authorization is available

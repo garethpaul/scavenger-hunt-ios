@@ -236,6 +236,9 @@ end
   unless document.include?('Mapbox token formats')
     failures << "#{doc_path} must document the tracked Mapbox token format guard"
   end
+  unless document.include?('Mapbox style URL credentials')
+    failures << "#{doc_path} must document the Mapbox style URL credential boundary"
+  end
 end
 
 view_controller = File.read('engagement/ViewController.swift')
@@ -264,6 +267,17 @@ unless view_controller.include?('let allowedStyleURLSchemes = ["mapbox", "https"
 end
 unless view_controller.include?('styleURL.host?.lowercased() == "styles"')
   failures << 'ViewController.swift must require the styles authority for mapbox style URLs'
+end
+unless view_controller.include?('guard styleURL.user == nil, styleURL.password == nil')
+  failures << 'ViewController.swift must reject embedded Mapbox style URL credentials'
+end
+unless view_controller.include?('URLComponents(url: styleURL, resolvingAgainstBaseURL: false)?.queryItems') &&
+       view_controller.include?('$0.name.lowercased() == "access_token"')
+  failures << 'ViewController.swift must reject access_token style URL query parameters'
+end
+unless view_controller.include?('let stylePathComponents = styleURL.pathComponents.filter { $0 != "/" }') &&
+       view_controller.include?('guard stylePathComponents.count >= 2')
+  failures << 'ViewController.swift must require owner and style path components for mapbox styles'
 end
 unless view_controller.include?('guard let styleURLHost = styleURL.host, !styleURLHost.isEmpty')
   failures << 'ViewController.swift must require a host for https style URLs'

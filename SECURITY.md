@@ -39,6 +39,8 @@ Helpful reports include:
   digest changes require explicit review and do not imply current SDK support.
 - Locally configured style URLs must include the expected Mapbox styles
   authority or a non-empty HTTPS host.
+- Mapbox style URL credentials and `access_token` query parameters are rejected;
+  Mapbox-scheme styles must include owner and style path components.
 - Each location authorization transition must apply the delegate-provided
   status directly and disable Mapbox follow mode when permission is unavailable.
 - Tracked non-vendored files are checked for public and secret Mapbox token formats;

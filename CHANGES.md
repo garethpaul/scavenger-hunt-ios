@@ -6,6 +6,8 @@
   status and reset Mapbox follow mode after denial or revocation.
 - Added a tracked-file guard for public and secret Mapbox token formats without
   exposing matched values in checker output.
+- Rejected Mapbox style URL credentials, token query parameters, and incomplete
+  Mapbox owner/style paths while preserving credential-free HTTPS providers.
 
 ## 2026-06-10
 

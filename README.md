@@ -61,7 +61,9 @@ Set `MAPBOX_ACCESS_TOKEN` in Xcode build settings or include the copied
 `engagement/MapboxSecrets.xcconfig` in your local configuration. Optionally set
 `MAPBOX_STYLE_URL` locally to use a custom Mapbox style; leave it blank to use
 Mapbox's default style. Local style URLs are limited to `mapbox` or `https`
-schemes. Keep real Mapbox tokens and private style URLs out of git. Set your
+schemes, must not embed Mapbox style URL credentials or `access_token` query
+parameters, and `mapbox://styles` values require owner and style path
+components. Keep real Mapbox tokens and private style URLs out of git. Set your
 Apple development team locally in Xcode when building for a device; the checked
 in project keeps `DEVELOPMENT_TEAM` blank.
 
@@ -97,6 +99,8 @@ in project keeps `DEVELOPMENT_TEAM` blank.
   Mapbox token formats while allowing the local placeholder template.
 - `make check` also requires configured Mapbox style URLs to use `mapbox` or
   `https` schemes with valid scheme-specific authorities.
+- `make check` also rejects Mapbox style URL credentials, `access_token` query
+  parameters, and incomplete `mapbox://styles/<owner>/<style>` paths.
 - GitHub Actions runs the same static `make check` baseline with Ruby 3.3,
   Node 24-compatible pinned actions, read-only permissions, disabled checkout
   credential persistence, and a timeout.
@@ -148,6 +152,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   binary integrity and explicit legacy-build boundary.
 - See `docs/plans/2026-06-10-mapbox-style-url-authority.md` for configured
   style URL authority validation.
+- See `docs/plans/2026-06-12-mapbox-style-url-credential-path-validation.md`
+  for credential-free style URLs and complete Mapbox owner/style paths.
 - See `docs/plans/2026-06-12-location-authorization-transitions.md` for the
   status-driven tracking transition contract.
 - See `docs/plans/2026-06-12-mapbox-secret-token-guard.md` for the tracked

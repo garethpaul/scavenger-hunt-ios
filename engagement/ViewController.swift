@@ -119,8 +119,21 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MGLMapViewDel
             return nil
         }
 
+        guard styleURL.user == nil, styleURL.password == nil else {
+            return nil
+        }
+
+        if let queryItems = URLComponents(url: styleURL, resolvingAgainstBaseURL: false)?.queryItems,
+           queryItems.contains(where: { $0.name.lowercased() == "access_token" }) {
+            return nil
+        }
+
         if styleURLScheme == "mapbox" {
             guard styleURL.host?.lowercased() == "styles" else {
+                return nil
+            }
+            let stylePathComponents = styleURL.pathComponents.filter { $0 != "/" }
+            guard stylePathComponents.count >= 2 else {
                 return nil
             }
         } else {
