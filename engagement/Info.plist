@@ -40,8 +40,6 @@
 	<string>$(MAPBOX_ACCESS_TOKEN)</string>
 	<key>MAPBOX_STYLE_URL</key>
 	<string>$(MAPBOX_STYLE_URL)</string>
-	<key>MGLMapboxMetricsEnabledSettingShownInApp</key>
-	<true/>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Helps you find your treasure on the map.</string>
 	<key>UISupportedInterfaceOrientations~ipad</key>

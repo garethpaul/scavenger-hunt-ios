@@ -101,6 +101,8 @@ in project keeps `DEVELOPMENT_TEAM` blank.
   `https` schemes with valid scheme-specific authorities.
 - `make check` also rejects Mapbox style URL credentials, `access_token` query
   parameters, and incomplete `mapbox://styles/<owner>/<style>` paths.
+- `make check` also keeps Mapbox attribution and telemetry controls visible and
+  rejects the deprecated plist flag that claimed a separate in-app setting.
 - GitHub Actions runs the same static `make check` baseline with Ruby 3.3,
   Node 24-compatible pinned actions, read-only permissions, disabled checkout
   credential persistence, and a timeout.
@@ -158,6 +160,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   status-driven tracking transition contract.
 - See `docs/plans/2026-06-12-mapbox-secret-token-guard.md` for the tracked
   Mapbox token formats guard and historical-alert boundary.
+- See `docs/plans/2026-06-13-mapbox-attribution-telemetry-controls.md` for the
+  required Mapbox attribution and telemetry controls.
 
 ## Contributing
 

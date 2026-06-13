@@ -38,6 +38,8 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MGLMapViewDel
         mapView = MGLMapView(frame: view.bounds,
                                  styleURL: styleURL)
         mapView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        mapView.logoView.isHidden = false
+        mapView.attributionButton.isHidden = false
 
         mapView.setCenter(CLLocationCoordinate2D(latitude: 37.890576,
                                     longitude: -122.472104),

@@ -46,6 +46,9 @@ Helpful reports include:
 - Tracked non-vendored files are checked for public and secret Mapbox token formats;
   the historical secret-scanning alert still requires credential-owner
   revocation evidence before resolution.
+- Mapbox attribution and telemetry controls must remain visible; the vendored
+  SDK exposes telemetry choice through its attribution info menu, so the app
+  must not hide or remove either required control.
 
 ## Mobile Privacy Notes
 

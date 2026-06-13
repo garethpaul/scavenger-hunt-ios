@@ -39,12 +39,14 @@ ci_plan = 'docs/plans/2026-06-10-ci-baseline.md'
 vendored_framework_plan = 'docs/plans/2026-06-10-vendored-framework-integrity.md'
 authorization_transition_plan = 'docs/plans/2026-06-12-location-authorization-transitions.md'
 mapbox_token_guard_plan = 'docs/plans/2026-06-12-mapbox-secret-token-guard.md'
+mapbox_attribution_plan = 'docs/plans/2026-06-13-mapbox-attribution-telemetry-controls.md'
 failures << "#{canonical_plan} is missing" unless File.exist?(canonical_plan)
 failures << "#{signing_team_plan} is missing" unless File.exist?(signing_team_plan)
 failures << "#{ci_plan} is missing" unless File.exist?(ci_plan)
 failures << "#{vendored_framework_plan} is missing" unless File.exist?(vendored_framework_plan)
 failures << "#{authorization_transition_plan} is missing" unless File.exist?(authorization_transition_plan)
 failures << "#{mapbox_token_guard_plan} is missing" unless File.exist?(mapbox_token_guard_plan)
+failures << "#{mapbox_attribution_plan} is missing" unless File.exist?(mapbox_attribution_plan)
 failures << 'docs/plans must contain at least one completed plan' if docs_plans.empty?
 
 docs_plans.each do |plan_path|
@@ -72,8 +74,8 @@ if info_plist.include?('NSLocationAlways') ||
    info_plist.include?('NSLocationAlwaysAndWhenInUseUsageDescription')
   failures << 'engagement/Info.plist must not request always-on location authorization'
 end
-if info_plist.include?('<key>MGLMapboxMetricsEnabledSettingShownInApp </key>')
-  failures << 'MGLMapboxMetricsEnabledSettingShownInApp key must not contain trailing whitespace'
+if info_plist.include?('MGLMapboxMetricsEnabledSettingShownInApp')
+  failures << 'engagement/Info.plist must not retain the deprecated Mapbox metrics-setting flag'
 end
 if info_plist.include?('treaure')
   failures << 'NSLocationWhenInUseUsageDescription contains a typo'
@@ -226,7 +228,7 @@ else
 end
 
 %w[README.md VISION.md SECURITY.md CHANGES.md].each do |doc_path|
-  document = File.read(doc_path)
+  document = File.read(doc_path).gsub(/\s+/, ' ')
   unless document.include?('GitHub Actions')
     failures << "#{doc_path} must document the GitHub Actions baseline"
   end
@@ -239,9 +241,21 @@ end
   unless document.include?('Mapbox style URL credentials')
     failures << "#{doc_path} must document the Mapbox style URL credential boundary"
   end
+  unless document.include?('Mapbox attribution and telemetry controls')
+    failures << "#{doc_path} must document the Mapbox attribution and telemetry controls"
+  end
 end
 
 view_controller = File.read('engagement/ViewController.swift')
+unless view_controller.include?('mapView.logoView.isHidden = false') &&
+       view_controller.include?('mapView.attributionButton.isHidden = false')
+  failures << 'ViewController.swift must keep Mapbox logo, attribution, and telemetry controls visible'
+end
+if view_controller.match?(/mapView\.(?:logoView|attributionButton)\.isHidden\s*=\s*true/) ||
+   view_controller.match?(/mapView\.(?:logoView|attributionButton)\.alpha\s*=\s*0(?:\.0)?/) ||
+   view_controller.match?(/mapView\.(?:logoView|attributionButton)\.removeFromSuperview\s*\(/)
+  failures << 'ViewController.swift must not hide or remove Mapbox attribution and telemetry controls'
+end
 if view_controller.include?('URL(string: "")')
   failures << 'ViewController.swift must not pass a blank Mapbox style URL'
 end

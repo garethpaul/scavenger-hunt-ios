@@ -1,5 +1,10 @@
 # Changes
 
+## 2026-06-13
+
+- Kept Mapbox attribution and telemetry controls explicitly visible and removed
+  the deprecated plist flag for a separate in-app metrics setting.
+
 ## 2026-06-12
 
 - Made each location authorization transition consume its delegate-provided
