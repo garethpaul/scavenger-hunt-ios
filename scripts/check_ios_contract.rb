@@ -40,6 +40,7 @@ vendored_framework_plan = 'docs/plans/2026-06-10-vendored-framework-integrity.md
 authorization_transition_plan = 'docs/plans/2026-06-12-location-authorization-transitions.md'
 mapbox_token_guard_plan = 'docs/plans/2026-06-12-mapbox-secret-token-guard.md'
 mapbox_attribution_plan = 'docs/plans/2026-06-13-mapbox-attribution-telemetry-controls.md'
+location_request_plan = 'docs/plans/2026-06-13-location-request-gating.md'
 failures << "#{canonical_plan} is missing" unless File.exist?(canonical_plan)
 failures << "#{signing_team_plan} is missing" unless File.exist?(signing_team_plan)
 failures << "#{ci_plan} is missing" unless File.exist?(ci_plan)
@@ -47,6 +48,7 @@ failures << "#{vendored_framework_plan} is missing" unless File.exist?(vendored_
 failures << "#{authorization_transition_plan} is missing" unless File.exist?(authorization_transition_plan)
 failures << "#{mapbox_token_guard_plan} is missing" unless File.exist?(mapbox_token_guard_plan)
 failures << "#{mapbox_attribution_plan} is missing" unless File.exist?(mapbox_attribution_plan)
+failures << "#{location_request_plan} is missing" unless File.exist?(location_request_plan)
 failures << 'docs/plans must contain at least one completed plan' if docs_plans.empty?
 
 docs_plans.each do |plan_path|
@@ -235,6 +237,9 @@ end
   unless document.include?('authorization transition')
     failures << "#{doc_path} must document the location authorization transition contract"
   end
+  unless document.include?('request location authorization only from the undetermined state')
+    failures << "#{doc_path} must document initial location authorization request gating"
+  end
   unless document.include?('Mapbox token formats')
     failures << "#{doc_path} must document the tracked Mapbox token format guard"
   end
@@ -312,11 +317,13 @@ if view_controller.match?(/print\s*\(\s*"locations\s*=/) ||
    view_controller.match?(/print\s*\([^)]*\.latitude[^)]*\.longitude/m)
   failures << 'ViewController.swift must not log precise user coordinates'
 end
-unless view_controller.include?('locationManager.delegate = self')
-  failures << 'ViewController.swift must assign the location manager delegate before requesting authorization'
-end
 unless view_controller.include?('locationManager.requestWhenInUseAuthorization()')
   failures << 'ViewController.swift must request when-in-use location authorization'
+end
+unless view_controller.scan('CLLocationManager.authorizationStatus()').length == 1 &&
+       view_controller.match?(/locationManager\.delegate = self\s*let initialAuthorizationStatus = CLLocationManager\.authorizationStatus\(\)/m) &&
+       view_controller.match?(/if initialAuthorizationStatus == \.notDetermined \{\s*locationManager\.requestWhenInUseAuthorization\(\)\s*\}/m)
+  failures << 'ViewController.swift must capture status after assigning the delegate and request authorization only from notDetermined'
 end
 if view_controller.include?('requestAlwaysAuthorization()')
   failures << 'ViewController.swift must not request always-on location authorization'
@@ -327,8 +334,8 @@ end
 unless view_controller.include?('private func updateUserTracking(for status: CLAuthorizationStatus)')
   failures << 'ViewController.swift must define a status-driven user tracking helper'
 end
-unless view_controller.include?('updateUserTracking(for: CLLocationManager.authorizationStatus())')
-  failures << 'ViewController.swift must initialize tracking from the current authorization status'
+unless view_controller.include?('updateUserTracking(for: initialAuthorizationStatus)')
+  failures << 'ViewController.swift must initialize tracking from the captured authorization status'
 end
 unless view_controller.match?(/func locationManager\(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus\)\s*\{\s*updateUserTracking\(for: status\)\s*\}/m)
   failures << 'ViewController.swift must apply the delegate-provided authorization status'

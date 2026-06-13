@@ -2,6 +2,8 @@
 
 ## 2026-06-13
 
+- Changed initial map setup to request location authorization only from the
+  undetermined state and reuse the captured status for tracking setup.
 - Kept Mapbox attribution and telemetry controls explicitly visible and removed
   the deprecated plist flag for a separate in-app metrics setting.
 

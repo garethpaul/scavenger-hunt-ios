@@ -21,7 +21,10 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MGLMapViewDel
         super.viewDidLoad()
         
         locationManager.delegate = self
-        locationManager.requestWhenInUseAuthorization()
+        let initialAuthorizationStatus = CLLocationManager.authorizationStatus()
+        if initialAuthorizationStatus == .notDetermined {
+            locationManager.requestWhenInUseAuthorization()
+        }
         
         logoView = UIImageView(frame: CGRect(x: 0, y: 10, width: 55, height: 40))
         logoView.image = UIImage(named: "Logo")
@@ -47,7 +50,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MGLMapViewDel
         mapView.delegate = self
         
         view.addSubview(mapView)
-        updateUserTracking(for: CLLocationManager.authorizationStatus())
+        updateUserTracking(for: initialAuthorizationStatus)
     }
     
     override func viewDidAppear(_ animated: Bool) {

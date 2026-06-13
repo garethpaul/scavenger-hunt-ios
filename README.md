@@ -84,6 +84,8 @@ in project keeps `DEVELOPMENT_TEAM` blank.
 - `make check` also requires each location authorization transition to consume
   the delegate-provided status and stop Mapbox follow mode after denial or
   revocation.
+- `make check` also requires the app to request location authorization only
+  from the undetermined state during initial setup.
 - `make check` also rejects always-on location authorization prompts and plist
   usage-description keys.
 - `make check` also requires the prize marker to be added only once when the
@@ -162,6 +164,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   Mapbox token formats guard and historical-alert boundary.
 - See `docs/plans/2026-06-13-mapbox-attribution-telemetry-controls.md` for the
   required Mapbox attribution and telemetry controls.
+- See `docs/plans/2026-06-13-location-request-gating.md` for the initial
+  location authorization request boundary.
 
 ## Contributing
 

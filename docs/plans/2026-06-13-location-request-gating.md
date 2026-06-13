@@ -1,6 +1,6 @@
 # Location Authorization Request Gating
 
-## Status: Planned
+## Status: Completed
 
 ## Context
 
@@ -75,3 +75,23 @@ skip, plus focused hostile mutations and structured artifact checks.
 
 This change does not alter permission copy, request background location,
 introduce a settings deep link, or claim simulator/device validation.
+
+## Work Completed
+
+- Captured the initial `CLLocationManager` authorization status once after
+  assigning the delegate.
+- Limited `requestWhenInUseAuthorization()` to `.notDetermined` and reused the
+  captured status for initial tracking setup.
+- Extended the static iOS contract and maintained documentation to preserve the
+  request boundary and status ordering.
+
+## Verification
+
+- `ruby scripts/check_ios_contract.rb` passed.
+- `make check` passed with only the documented legacy Xcode build skip because
+  no compatible Apple toolchain is installed in the Linux environment.
+- Focused hostile mutations rejected unconditional requests, the wrong status,
+  delegate ordering loss, duplicate status reads, missing captured-status
+  application, documentation drift, and an incomplete plan status.
+- Root-independent validation and structured workflow, plist, asset JSON, and
+  README SVG parsing passed.

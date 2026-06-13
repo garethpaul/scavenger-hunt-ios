@@ -43,6 +43,8 @@ Helpful reports include:
   Mapbox-scheme styles must include owner and style path components.
 - Each location authorization transition must apply the delegate-provided
   status directly and disable Mapbox follow mode when permission is unavailable.
+- Initial setup must request location authorization only from the undetermined
+  state and reuse that captured status when applying tracking behavior.
 - Tracked non-vendored files are checked for public and secret Mapbox token formats;
   the historical secret-scanning alert still requires credential-owner
   revocation evidence before resolution.
