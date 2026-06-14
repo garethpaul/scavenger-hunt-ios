@@ -1,4 +1,4 @@
-ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+override ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 RUBY ?= ruby
 RUN_LEGACY_XCODE ?= 0
 

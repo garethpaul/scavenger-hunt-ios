@@ -1,6 +1,6 @@
 # Make Root Override Protection
 
-## Status: Planned
+## Status: Completed
 
 ## Context
 
@@ -51,3 +51,25 @@ Run the static contract, all Make aliases, external hostile execution, Ruby
 - root-declaration, checker, plan-status, README-index, and evidence mutations
 - Ruby syntax, workflow YAML, protected-file, secret, artifact, and
   `git diff --check` gates
+
+## Work Completed
+
+- Protected the Makefile-derived repository root from command-line and
+  environment overrides while preserving configurable Ruby and Xcode inputs.
+- Added exact declaration, completed-evidence, and README-index contracts.
+- Preserved all Swift, Mapbox, signing, location, vendored-framework, and
+  workflow behavior boundaries.
+
+## Verification Results
+
+- `ruby scripts/check_ios_contract.rb` passed.
+- From both the checkout and an external directory, all five public Make aliases passed.
+- `make ROOT=/tmp check` passed externally while still executing the
+  repository-owned iOS contract.
+- Ruby 3.3 passed the full static gate; legacy Xcode remained explicitly
+  skipped because `RUN_LEGACY_XCODE` was not enabled on a compatible macOS host.
+- Six hostile mutations were rejected across root declaration, checker
+  expectation, plan status, README indexing, and recorded evidence.
+- Ruby syntax, workflow YAML, exact-base protected-file comparison, secret
+  screening, generated-artifact screening, and `git diff --check` passed before
+  shipping.

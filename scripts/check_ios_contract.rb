@@ -41,6 +41,7 @@ authorization_transition_plan = 'docs/plans/2026-06-12-location-authorization-tr
 mapbox_token_guard_plan = 'docs/plans/2026-06-12-mapbox-secret-token-guard.md'
 mapbox_attribution_plan = 'docs/plans/2026-06-13-mapbox-attribution-telemetry-controls.md'
 location_request_plan = 'docs/plans/2026-06-13-location-request-gating.md'
+make_root_plan = 'docs/plans/2026-06-14-make-root-override-protection.md'
 failures << "#{canonical_plan} is missing" unless File.exist?(canonical_plan)
 failures << "#{signing_team_plan} is missing" unless File.exist?(signing_team_plan)
 failures << "#{ci_plan} is missing" unless File.exist?(ci_plan)
@@ -49,6 +50,7 @@ failures << "#{authorization_transition_plan} is missing" unless File.exist?(aut
 failures << "#{mapbox_token_guard_plan} is missing" unless File.exist?(mapbox_token_guard_plan)
 failures << "#{mapbox_attribution_plan} is missing" unless File.exist?(mapbox_attribution_plan)
 failures << "#{location_request_plan} is missing" unless File.exist?(location_request_plan)
+failures << "#{make_root_plan} is missing" unless File.exist?(make_root_plan)
 failures << 'docs/plans must contain at least one completed plan' if docs_plans.empty?
 
 docs_plans.each do |plan_path|
@@ -207,10 +209,28 @@ rescue Psych::Exception => e
 end
 
 makefile = File.read('Makefile')
+root_declaration = 'override ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))'
+root_assignments = makefile.lines.map(&:chomp).grep(/\A(?:override\s+)?ROOT\s*[:?+]?=/)
+unless makefile.start_with?("#{root_declaration}\n") && root_assignments == [root_declaration]
+  failures << 'Makefile must define exactly one protected repository-derived ROOT declaration first'
+end
 unless makefile.include?('RUN_LEGACY_XCODE ?= 0') &&
        makefile.include?('xcodebuild is required when RUN_LEGACY_XCODE=1') &&
        makefile.include?('legacy Xcode build skipped')
   failures << 'Makefile must keep legacy Xcode compilation explicit and opt-in'
+end
+
+if File.exist?(make_root_plan)
+  root_plan = File.read(make_root_plan)
+  [
+    'Status: Completed',
+    '`make ROOT=/tmp check` passed',
+    'all five public Make aliases passed',
+    'Six hostile mutations were rejected',
+    'Ruby 3.3'
+  ].each do |evidence|
+    failures << "#{make_root_plan} must record verification evidence #{evidence.inspect}" unless root_plan.include?(evidence)
+  end
 end
 
 framework_manifest = 'VENDORED_FRAMEWORKS.sha256'
@@ -249,6 +269,10 @@ end
   unless document.include?('Mapbox attribution and telemetry controls')
     failures << "#{doc_path} must document the Mapbox attribution and telemetry controls"
   end
+end
+
+unless File.read('README.md').include?(make_root_plan)
+  failures << "README.md must reference #{make_root_plan}"
 end
 
 view_controller = File.read('engagement/ViewController.swift')
