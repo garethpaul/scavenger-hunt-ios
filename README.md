@@ -166,6 +166,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   required Mapbox attribution and telemetry controls.
 - See `docs/plans/2026-06-13-location-request-gating.md` for the initial
   location authorization request boundary.
+- See `docs/plans/2026-06-14-make-root-override-protection.md` for the
+  caller-resistant, location-independent iOS validation root.
 
 ## Contributing
 
