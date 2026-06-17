@@ -30,6 +30,8 @@ Priority:
   mode when permission becomes unavailable
 - Keep initial setup able to request location authorization only from the
   undetermined state
+- Keep validated local coordinate overrides pairwise and preserve reviewed demo
+  fallbacks when local event values are incomplete or invalid
 - Avoid logging precise user coordinates
 - Keep Xcode workspace and scheme metadata portable across machines
 - Keep account-specific Xcode signing teams out of source control
@@ -43,7 +45,6 @@ Priority:
 Next priorities:
 
 - Add README setup notes for Mapbox credentials and Xcode version
-- Document whether coordinates are fixed, demo-only, or configurable
 - Include simulator verification notes for annotation behavior
 
 Contribution rules:

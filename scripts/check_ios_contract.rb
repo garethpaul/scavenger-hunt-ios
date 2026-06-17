@@ -42,6 +42,7 @@ mapbox_token_guard_plan = 'docs/plans/2026-06-12-mapbox-secret-token-guard.md'
 mapbox_attribution_plan = 'docs/plans/2026-06-13-mapbox-attribution-telemetry-controls.md'
 location_request_plan = 'docs/plans/2026-06-13-location-request-gating.md'
 make_root_plan = 'docs/plans/2026-06-14-make-root-override-protection.md'
+coordinate_plan = 'docs/plans/2026-06-17-configurable-demo-coordinates.md'
 failures << "#{canonical_plan} is missing" unless File.exist?(canonical_plan)
 failures << "#{signing_team_plan} is missing" unless File.exist?(signing_team_plan)
 failures << "#{ci_plan} is missing" unless File.exist?(ci_plan)
@@ -51,6 +52,7 @@ failures << "#{mapbox_token_guard_plan} is missing" unless File.exist?(mapbox_to
 failures << "#{mapbox_attribution_plan} is missing" unless File.exist?(mapbox_attribution_plan)
 failures << "#{location_request_plan} is missing" unless File.exist?(location_request_plan)
 failures << "#{make_root_plan} is missing" unless File.exist?(make_root_plan)
+failures << "#{coordinate_plan} is missing" unless File.exist?(coordinate_plan)
 failures << 'docs/plans must contain at least one completed plan' if docs_plans.empty?
 
 docs_plans.each do |plan_path|
@@ -92,6 +94,15 @@ unless File.read('engagement/MapboxSecrets.xcconfig.example').include?('replace-
 end
 unless File.read('engagement/MapboxSecrets.xcconfig.example').include?('MAPBOX_STYLE_URL =')
   failures << 'MapboxSecrets.xcconfig.example must expose optional MAPBOX_STYLE_URL configuration'
+end
+coordinate_keys = %w[MAP_CENTER_LATITUDE MAP_CENTER_LONGITUDE PRIZE_LATITUDE PRIZE_LONGITUDE]
+coordinate_keys.each do |key|
+  unless info_plist.include?("<key>#{key}</key>") && info_plist.include?("<string>$(#{key})</string>")
+    failures << "engagement/Info.plist must read #{key} from $(#{key})"
+  end
+  unless File.read('engagement/MapboxSecrets.xcconfig.example').include?("#{key} =")
+    failures << "MapboxSecrets.xcconfig.example must expose optional #{key} configuration"
+  end
 end
 
 tracked_files_output, tracked_files_error, tracked_files_status = Open3.capture3('git', 'ls-files', '-z')
@@ -233,6 +244,19 @@ if File.exist?(make_root_plan)
   end
 end
 
+if File.exist?(coordinate_plan)
+  coordinate_plan_text = File.read(coordinate_plan)
+  [
+    'Status: Completed',
+    'focused coordinate contract passed',
+    'make check passed',
+    'Nine hostile coordinate mutations were rejected',
+    'Exact diff'
+  ].each do |evidence|
+    failures << "#{coordinate_plan} must record verification evidence #{evidence.inspect}" unless coordinate_plan_text.include?(evidence)
+  end
+end
+
 framework_manifest = 'VENDORED_FRAMEWORKS.sha256'
 framework_binary = 'Pods/Mapbox-iOS-SDK/dynamic/Mapbox.framework/Mapbox'
 if File.exist?(framework_manifest)
@@ -269,13 +293,49 @@ end
   unless document.include?('Mapbox attribution and telemetry controls')
     failures << "#{doc_path} must document the Mapbox attribution and telemetry controls"
   end
+  unless document.include?('validated local coordinate overrides')
+    failures << "#{doc_path} must document validated local coordinate overrides"
+  end
 end
 
 unless File.read('README.md').include?(make_root_plan)
   failures << "README.md must reference #{make_root_plan}"
 end
+unless File.read('README.md').include?(coordinate_plan)
+  failures << "README.md must reference #{coordinate_plan}"
+end
 
 view_controller = File.read('engagement/ViewController.swift')
+unless view_controller.include?('private let demoMapCenterCoordinate = CLLocationCoordinate2D(latitude: 37.890576,') &&
+       view_controller.include?('private let demoPrizeCoordinate = CLLocationCoordinate2D(latitude: 37.826815,')
+  failures << 'ViewController.swift must keep the reviewed demo coordinate fallbacks'
+end
+unless view_controller.include?('private func configuredCoordinate(latitudeKey: String,') &&
+       view_controller.include?('longitudeKey: String,') &&
+       view_controller.include?('fallback: CLLocationCoordinate2D) -> CLLocationCoordinate2D')
+  failures << 'ViewController.swift must resolve coordinate overrides as a validated pair'
+end
+unless view_controller.include?('configuredCoordinateComponent(forInfoDictionaryKey: latitudeKey)') &&
+       view_controller.include?('configuredCoordinateComponent(forInfoDictionaryKey: longitudeKey)')
+  failures << 'ViewController.swift must require both coordinate components'
+end
+unless view_controller.include?('!trimmedValue.contains("$(")') &&
+       view_controller.include?('guard let stringValue = rawValue as? String else') &&
+       view_controller.include?('let numericValue = Double(trimmedValue)') &&
+       !view_controller.include?('rawValue as? NSNumber')
+  failures << 'ViewController.swift must reject unresolved and non-numeric coordinate settings'
+end
+unless view_controller.include?('guard CLLocationCoordinate2DIsValid(coordinate) else')
+  failures << 'ViewController.swift must reject invalid Core Location coordinates'
+end
+unless view_controller.include?('latitudeKey: "MAP_CENTER_LATITUDE"') &&
+       view_controller.include?('longitudeKey: "MAP_CENTER_LONGITUDE"') &&
+       view_controller.include?('fallback: demoMapCenterCoordinate') &&
+       view_controller.include?('latitudeKey: "PRIZE_LATITUDE"') &&
+       view_controller.include?('longitudeKey: "PRIZE_LONGITUDE"') &&
+       view_controller.include?('fallback: demoPrizeCoordinate')
+  failures << 'ViewController.swift must apply validated map-center and prize coordinate overrides'
+end
 unless view_controller.include?('mapView.logoView.isHidden = false') &&
        view_controller.include?('mapView.attributionButton.isHidden = false')
   failures << 'ViewController.swift must keep Mapbox logo, attribution, and telemetry controls visible'

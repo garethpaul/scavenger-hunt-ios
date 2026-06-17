@@ -1,6 +1,6 @@
 # Configurable Demo Coordinates
 
-## Status: In Progress
+## Status: Completed
 
 ## Context
 
@@ -57,10 +57,11 @@ private event location.
 
 **Dependencies:** U1
 
-**Files:** `engagement/Info.plist`
+**Files:** `engagement/Info.plist`, `engagement/MapboxSecrets.xcconfig.example`
 
 **Approach:** Add map-center and prize latitude/longitude keys backed by Xcode
-build-setting placeholders. Unconfigured placeholders intentionally reach the
+build-setting placeholders, and expose blank local settings in the existing
+example configuration. Unconfigured placeholders intentionally reach the
 resolver and select the reviewed demo fallbacks.
 
 **Verification:** The plist remains valid and contains all four exact keys with
@@ -119,8 +120,31 @@ directory, and documentation contracts fail closed when the boundary drifts.
 
 ## Work Completed
 
-- Pending implementation.
+- Replaced anonymous inline coordinates with named reviewed demo map-center and
+  prize fallbacks while preserving their exact values.
+- Added pairwise local build-setting resolution for map-center and prize
+  latitude/longitude values, rejecting absent, unresolved, non-string,
+  non-numeric, non-finite, and out-of-range inputs through Core Location
+  validity checks.
+- Added all four Info.plist placeholders and blank settings to the ignored local
+  configuration example without committing a private event location.
+- Extended the static checker and documentation to protect the privacy,
+  configuration, provider-disclosure, and completed-plan boundaries.
 
 ## Verification
 
-- Pending implementation and validation.
+- The focused coordinate contract passed, including Ruby syntax and structured
+  Info.plist parsing.
+- Repository and external-directory make check passed with only the documented
+  legacy Xcode build skip on Linux.
+- Nine hostile coordinate mutations were rejected across plist and example
+  keys, demo values, pairwise lookup, unresolved and non-numeric input,
+  Core Location validity, call-site wiring, and documentation.
+- Structured correctness, privacy, testing, maintainability, and project-policy
+  review found and resolved boolean plist coercion and an overstated provider
+  privacy claim; no actionable findings remain.
+- Exact diff, generated-artifact, credential, conflict, mode, binary,
+  dependency, vendored-framework, and upstream audits passed for the nine
+  intended paths.
+- A compatible Swift/Xcode toolchain is unavailable on Linux, so no compilation,
+  simulator, device, or visual-behavior result is claimed.

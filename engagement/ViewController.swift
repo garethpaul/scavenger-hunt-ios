@@ -16,6 +16,10 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MGLMapViewDel
     var mapView: MGLMapView!
     var logoView: UIImageView!
     private var didAddPrizeAnnotation = false
+    private let demoMapCenterCoordinate = CLLocationCoordinate2D(latitude: 37.890576,
+                                                                 longitude: -122.472104)
+    private let demoPrizeCoordinate = CLLocationCoordinate2D(latitude: 37.826815,
+                                                             longitude: -122.4992434)
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -44,9 +48,10 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MGLMapViewDel
         mapView.logoView.isHidden = false
         mapView.attributionButton.isHidden = false
 
-        mapView.setCenter(CLLocationCoordinate2D(latitude: 37.890576,
-                                    longitude: -122.472104),
-                                    zoomLevel: 11, animated: false)
+        let mapCenterCoordinate = configuredCoordinate(latitudeKey: "MAP_CENTER_LATITUDE",
+                                                       longitudeKey: "MAP_CENTER_LONGITUDE",
+                                                       fallback: demoMapCenterCoordinate)
+        mapView.setCenter(mapCenterCoordinate, zoomLevel: 11, animated: false)
         mapView.delegate = self
         
         view.addSubview(mapView)
@@ -62,8 +67,9 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MGLMapViewDel
         
         // Add marker for Hawk Hill
         let hawk = MGLPointAnnotation()
-        hawk.coordinate = CLLocationCoordinate2D(latitude: ("37.826815" as NSString).doubleValue,
-                                                 longitude: ("-122.4992434" as NSString).doubleValue)
+        hawk.coordinate = configuredCoordinate(latitudeKey: "PRIZE_LATITUDE",
+                                               longitudeKey: "PRIZE_LONGITUDE",
+                                               fallback: demoPrizeCoordinate)
         hawk.title = "Prize"
         mapView.addAnnotation(hawk)
         mapView.selectAnnotation(hawk, animated: true)
@@ -148,6 +154,41 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MGLMapViewDel
         }
 
         return styleURL
+    }
+
+    private func configuredCoordinate(latitudeKey: String,
+                                      longitudeKey: String,
+                                      fallback: CLLocationCoordinate2D) -> CLLocationCoordinate2D {
+        guard let latitude = configuredCoordinateComponent(forInfoDictionaryKey: latitudeKey),
+              let longitude = configuredCoordinateComponent(forInfoDictionaryKey: longitudeKey) else {
+            return fallback
+        }
+
+        let coordinate = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+        guard CLLocationCoordinate2DIsValid(coordinate) else {
+            return fallback
+        }
+
+        return coordinate
+    }
+
+    private func configuredCoordinateComponent(forInfoDictionaryKey key: String) -> CLLocationDegrees? {
+        guard let rawValue = Bundle.main.object(forInfoDictionaryKey: key) else {
+            return nil
+        }
+
+        guard let stringValue = rawValue as? String else {
+            return nil
+        }
+
+        let trimmedValue = stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedValue.isEmpty,
+              !trimmedValue.contains("$("),
+              let numericValue = Double(trimmedValue) else {
+            return nil
+        }
+
+        return numericValue
     }
 
     override func didReceiveMemoryWarning() {

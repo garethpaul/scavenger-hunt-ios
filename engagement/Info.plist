@@ -40,6 +40,14 @@
 	<string>$(MAPBOX_ACCESS_TOKEN)</string>
 	<key>MAPBOX_STYLE_URL</key>
 	<string>$(MAPBOX_STYLE_URL)</string>
+	<key>MAP_CENTER_LATITUDE</key>
+	<string>$(MAP_CENTER_LATITUDE)</string>
+	<key>MAP_CENTER_LONGITUDE</key>
+	<string>$(MAP_CENTER_LONGITUDE)</string>
+	<key>PRIZE_LATITUDE</key>
+	<string>$(PRIZE_LATITUDE)</string>
+	<key>PRIZE_LONGITUDE</key>
+	<string>$(PRIZE_LONGITUDE)</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Helps you find your treasure on the map.</string>
 	<key>UISupportedInterfaceOrientations~ipad</key>

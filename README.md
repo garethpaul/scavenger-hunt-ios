@@ -67,6 +67,17 @@ components. Keep real Mapbox tokens and private style URLs out of git. Set your
 Apple development team locally in Xcode when building for a device; the checked
 in project keeps `DEVELOPMENT_TEAM` blank.
 
+The checked-in map center and prize marker are reviewed public demo fallbacks.
+To use a different event location without editing source, set all values in a
+pair through local build settings: `MAP_CENTER_LATITUDE` with
+`MAP_CENTER_LONGITUDE`, and/or `PRIZE_LATITUDE` with `PRIZE_LONGITUDE`. The app
+uses only complete, numeric, valid coordinate pairs; missing, unresolved, or
+out-of-range settings fall back to the corresponding demo coordinate. Keep
+private event locations in the ignored `MapboxSecrets.xcconfig`. These validated
+local coordinate overrides are not logged by the sample. Loading map content
+can disclose the viewed region to Mapbox under the SDK and service privacy
+terms.
+
 ## Running or Using the Project
 
 - Open `TreasureHunt.xcodeproj` in Xcode, choose the app or sample scheme, and run it on the matching simulator/device.
@@ -90,6 +101,8 @@ in project keeps `DEVELOPMENT_TEAM` blank.
   usage-description keys.
 - `make check` also requires the prize marker to be added only once when the
   view appears repeatedly.
+- `make check` also protects validated local coordinate overrides and reviewed
+  pairwise demo fallbacks for the map center and prize marker.
 - `make check` also verifies the Xcode workspace uses a relative project
   reference, the app scheme is shared, and developer-local `xcuserdata` stays
   untracked.
@@ -168,6 +181,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   location authorization request boundary.
 - See `docs/plans/2026-06-14-make-root-override-protection.md` for the
   caller-resistant, location-independent iOS validation root.
+- See `docs/plans/2026-06-17-configurable-demo-coordinates.md` for validated
+  local coordinate overrides and pairwise demo fallbacks.
 
 ## Contributing
 

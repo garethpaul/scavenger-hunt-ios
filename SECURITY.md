@@ -51,6 +51,11 @@ Helpful reports include:
 - Mapbox attribution and telemetry controls must remain visible; the vendored
   SDK exposes telemetry choice through its attribution info menu, so the app
   must not hide or remove either required control.
+- Private event locations must use the ignored local configuration and the
+  validated local coordinate overrides. Incomplete, unresolved, non-numeric,
+  or invalid pairs must fall back together to reviewed public demo values.
+  The sample does not log those values, but loading map content can disclose the
+  viewed region to Mapbox under the SDK and service privacy terms.
 
 ## Mobile Privacy Notes
 

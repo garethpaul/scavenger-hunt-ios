@@ -1,5 +1,10 @@
 # Changes
 
+## 2026-06-17
+
+- Added validated local coordinate overrides for the map center and prize
+  marker, preserving pairwise reviewed demo fallbacks for invalid settings.
+
 ## 2026-06-13
 
 - Changed initial map setup to request location authorization only from the
