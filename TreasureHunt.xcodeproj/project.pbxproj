@@ -11,6 +11,7 @@
 		59A4FDC4581D30284D6DB477 /* Pods_engagementUITests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 14AA9AE964CA96DCEDB4CBE1 /* Pods_engagementUITests.framework */; };
 		B70AFD1990E6EA4220AF4BB0 /* Pods_engagementTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B0CBA42716B10448E7978101 /* Pods_engagementTests.framework */; };
 		C365B9D41DF07A6200E8C8AF /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C365B9D31DF07A6200E8C8AF /* AppDelegate.swift */; };
+		A11C0DE11DF07A6200E8C8AF /* AppPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11C0DE01DF07A6200E8C8AF /* AppPolicy.swift */; };
 		C365B9D61DF07A6200E8C8AF /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C365B9D51DF07A6200E8C8AF /* ViewController.swift */; };
 		C365B9D91DF07A6200E8C8AF /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C365B9D71DF07A6200E8C8AF /* Main.storyboard */; };
 		C365B9DB1DF07A6200E8C8AF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C365B9DA1DF07A6200E8C8AF /* Assets.xcassets */; };
@@ -59,6 +60,7 @@
 		B0CBA42716B10448E7978101 /* Pods_engagementTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_engagementTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C365B9D01DF07A6200E8C8AF /* TreasureHunt.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TreasureHunt.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C365B9D31DF07A6200E8C8AF /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		A11C0DE01DF07A6200E8C8AF /* AppPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppPolicy.swift; path = ../Sources/ScavengerHuntPolicies/AppPolicy.swift; sourceTree = "<group>"; };
 		C365B9D51DF07A6200E8C8AF /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		C365B9D81DF07A6200E8C8AF /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		C365B9DA1DF07A6200E8C8AF /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -151,6 +153,7 @@
 			isa = PBXGroup;
 			children = (
 				C365B9D31DF07A6200E8C8AF /* AppDelegate.swift */,
+				A11C0DE01DF07A6200E8C8AF /* AppPolicy.swift */,
 				C365B9D51DF07A6200E8C8AF /* ViewController.swift */,
 				C365B9D71DF07A6200E8C8AF /* Main.storyboard */,
 				C365B9DA1DF07A6200E8C8AF /* Assets.xcassets */,
@@ -459,6 +462,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A11C0DE11DF07A6200E8C8AF /* AppPolicy.swift in Sources */,
 				C365B9D61DF07A6200E8C8AF /* ViewController.swift in Sources */,
 				C365B9D41DF07A6200E8C8AF /* AppDelegate.swift in Sources */,
 			);
@@ -554,7 +558,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
@@ -596,7 +600,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
@@ -620,7 +624,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.gpj.engagement;
 				PRODUCT_NAME = TreasureHunt;
-				SWIFT_VERSION = 3.0;
+				SWIFT_VERSION = 4.0;
 			};
 			name = Debug;
 		};
@@ -639,7 +643,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.gpj.engagement;
 				PRODUCT_NAME = TreasureHunt;
-				SWIFT_VERSION = 3.0;
+				SWIFT_VERSION = 4.0;
 			};
 			name = Release;
 		};

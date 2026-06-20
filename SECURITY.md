@@ -31,14 +31,37 @@ Helpful reports include:
 - Dependency manifests detected: Podfile, Podfile.lock. Dependency updates should preserve lockfiles when present and avoid introducing packages without a clear maintenance reason.
 - Xcode signing teams are account-specific and should be configured locally
   rather than committed to the shared project file.
-- GitHub Actions runs the static `make check` baseline with Ruby 3.3; keep that
-  hosted path free of private Mapbox tokens or signing teams.
+- GitHub Actions runs the static contract on Ubuntu plus native Swift policy
+  tests and an unsigned x86_64 simulator build on macOS; keep both hosted paths
+  free of private Mapbox tokens or signing teams.
 - CI actions stay pinned by commit and run with read-only repository contents
-  permission.
+  permission, while checkout credential persistence stays disabled.
 - The vendored Mapbox executable is covered by `VENDORED_FRAMEWORKS.sha256`;
   digest changes require explicit review and do not imply current SDK support.
 - Locally configured style URLs must include the expected Mapbox styles
   authority or a non-empty HTTPS host.
+- Mapbox style URL credentials and `access_token` query parameters are rejected;
+  Mapbox-scheme styles must include owner and style path components.
+- Each location authorization transition must apply the delegate-provided
+  status directly and disable Mapbox follow mode when permission is unavailable.
+- Initial setup must request location authorization only after a validated map
+  screen becomes visible, stop updates when it leaves, and ignore stale-session,
+  stale, future-dated, inaccurate, invalid, and null-island samples.
+  It must request location authorization only from the undetermined state.
+- Tracked non-vendored files are checked for public and secret Mapbox token formats;
+  the historical secret-scanning alert still requires credential-owner
+  revocation evidence before resolution.
+- Mapbox attribution and telemetry controls must remain visible; the vendored
+  SDK exposes telemetry choice through its attribution info menu, so the app
+  must not hide or remove either required control.
+- Private event locations must use the ignored local configuration and the
+  validated local coordinate overrides. Incomplete, unresolved, non-finite,
+  out-of-range, or exact `0,0` sentinel pairs must fall back together to reviewed public demo values.
+  The sample does not log those values, but loading map content can disclose the
+  viewed region to Mapbox under the SDK and service privacy terms.
+- The app bounds local token and style URL inputs, but the vendored Mapbox SDK
+  owns network request and response handling. Provider response-size, TLS,
+  availability, and telemetry behavior remain third-party runtime risks.
 
 ## Mobile Privacy Notes
 

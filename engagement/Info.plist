@@ -40,10 +40,16 @@
 	<string>$(MAPBOX_ACCESS_TOKEN)</string>
 	<key>MAPBOX_STYLE_URL</key>
 	<string>$(MAPBOX_STYLE_URL)</string>
-	<key>MGLMapboxMetricsEnabledSettingShownInApp</key>
-	<true/>
+	<key>MAP_CENTER_LATITUDE</key>
+	<string>$(MAP_CENTER_LATITUDE)</string>
+	<key>MAP_CENTER_LONGITUDE</key>
+	<string>$(MAP_CENTER_LONGITUDE)</string>
+	<key>PRIZE_LATITUDE</key>
+	<string>$(PRIZE_LATITUDE)</string>
+	<key>PRIZE_LONGITUDE</key>
+	<string>$(PRIZE_LONGITUDE)</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Helps you find your treasure on the map.</string>
+	<string>Your location is used while this screen is visible to center the map and help you find the treasure. Mapbox may process map and location data according to its telemetry settings.</string>
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>

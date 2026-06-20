@@ -21,21 +21,35 @@ Priority:
 - Keep optional Mapbox style URLs in local configuration
 - Keep configured Mapbox style URLs limited to expected schemes
 - Keep configured style URLs bound to valid scheme-specific authorities
+- Keep Mapbox style URL credentials and token query parameters out of style
+  configuration, with complete owner/style paths for Mapbox-scheme URLs
 - Request visible location authorization before user-location tracking
 - Keep location authorization scoped to when-in-use foreground tracking
 - Enable Mapbox user tracking only after compatible authorization is available
+- Keep each location authorization transition status-driven and revoke follow
+  mode when permission becomes unavailable
+- Keep initial setup able to request location authorization only from the
+  undetermined state
+- Keep validated local coordinate overrides pairwise and preserve reviewed demo
+  fallbacks when local event values are incomplete or invalid
+- Reject non-finite, out-of-range, and exact null-island sentinel coordinates
+- Accept location samples only while the map screen owns an active foreground
+  request and only when freshness and accuracy bounds pass
 - Avoid logging precise user coordinates
 - Keep Xcode workspace and scheme metadata portable across machines
 - Keep account-specific Xcode signing teams out of source control
 - Keep completed maintenance plans under `docs/plans`
-- Keep GitHub Actions running the static `make check` baseline
+- Keep GitHub Actions running static, native Swift policy, mutation, and Xcode
+  build gates
 - Keep the vendored Mapbox framework covered by a reviewed SHA-256 digest
-- Treat Swift and CocoaPods versions as legacy until documented
+- Reject public and secret Mapbox token formats from tracked non-vendored files
+- Keep Mapbox attribution and telemetry controls visible on the map
+- Keep the Swift 4/iOS 12 source baseline buildable while the vendored Mapbox
+  framework remains limited to legacy device and x86_64 simulator slices
 
 Next priorities:
 
 - Add README setup notes for Mapbox credentials and Xcode version
-- Document whether coordinates are fixed, demo-only, or configurable
 - Include simulator verification notes for annotation behavior
 
 Contribution rules:

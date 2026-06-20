@@ -3,6 +3,11 @@
 <!-- README-OVERVIEW-IMAGE -->
 ![Project overview](docs/readme-overview.svg)
 
+## Device Preview
+
+<!-- DEVICE-PREVIEW-IMAGE -->
+![Device preview](docs/device-preview.svg)
+
 ## Overview
 
 `garethpaul/scavenger-hunt-ios` is an Apple platform application or Swift sample. A scavenger hunt proposal app.
@@ -56,9 +61,27 @@ Set `MAPBOX_ACCESS_TOKEN` in Xcode build settings or include the copied
 `engagement/MapboxSecrets.xcconfig` in your local configuration. Optionally set
 `MAPBOX_STYLE_URL` locally to use a custom Mapbox style; leave it blank to use
 Mapbox's default style. Local style URLs are limited to `mapbox` or `https`
-schemes. Keep real Mapbox tokens and private style URLs out of git. Set your
+schemes, must not embed Mapbox style URL credentials or `access_token` query
+parameters, and `mapbox://styles` values require owner and style path
+components. Keep real Mapbox tokens and private style URLs out of git. Set your
 Apple development team locally in Xcode when building for a device; the checked
 in project keeps `DEVELOPMENT_TEAM` blank.
+
+The runtime accepts only bounded public `pk.` tokens and fails closed with a
+generic setup message rather than constructing a map with a placeholder, secret
+token, control characters, or an oversized value.
+
+The checked-in map center and prize marker are reviewed public demo fallbacks.
+To use a different event location without editing source, set all values in a
+pair through local build settings: `MAP_CENTER_LATITUDE` with
+`MAP_CENTER_LONGITUDE`, and/or `PRIZE_LATITUDE` with `PRIZE_LONGITUDE`. The app
+uses only complete, finite, valid coordinate pairs; missing, unresolved,
+non-numeric, out-of-range, or exact `0,0` sentinel settings fall back to the
+corresponding demo coordinate. Keep
+private event locations in the ignored `MapboxSecrets.xcconfig`. These validated
+local coordinate overrides are not logged by the sample. Loading map content
+can disclose the viewed region to Mapbox under the SDK and service privacy
+terms.
 
 ## Running or Using the Project
 
@@ -66,7 +89,10 @@ in project keeps `DEVELOPMENT_TEAM` blank.
 
 ## Testing and Verification
 
-- Xcode's test action or `xcodebuild test` with the appropriate scheme and destination
+- `swift test` runs 20 native policy tests without loading the vendored Mapbox
+  binary.
+- `ruby scripts/check_policy_mutations.rb` verifies nine hostile policy changes
+  are caught.
 - `make check` runs static checks for Mapbox token placeholders, asset
   references, safe annotation-image handling, CocoaPods lock consistency, and
   location authorization before map tracking. It also reports whether an Xcode
@@ -74,10 +100,17 @@ in project keeps `DEVELOPMENT_TEAM` blank.
 - `make check` also rejects precise user-location coordinate logging.
 - `make check` also requires Mapbox user-following mode to be gated on location
   authorization before tracking starts.
+- `make check` also requires each location authorization transition to consume
+  the delegate-provided status and stop Mapbox follow mode after denial or
+  revocation.
+- `make check` also requires the app to request location authorization only
+  from the undetermined state during initial setup.
 - `make check` also rejects always-on location authorization prompts and plist
   usage-description keys.
 - `make check` also requires the prize marker to be added only once when the
   view appears repeatedly.
+- `make check` also protects validated local coordinate overrides and reviewed
+  pairwise demo fallbacks for the map center and prize marker.
 - `make check` also verifies the Xcode workspace uses a relative project
   reference, the app scheme is shared, and developer-local `xcuserdata` stays
   untracked.
@@ -85,16 +118,30 @@ in project keeps `DEVELOPMENT_TEAM` blank.
   of the checked-in project file.
 - `make check` also requires optional Mapbox style URLs to come from local
   configuration rather than checked-in Swift or plist values.
+- `make check` scans tracked non-vendored files for both public and secret
+  Mapbox token formats while allowing the local placeholder template.
 - `make check` also requires configured Mapbox style URLs to use `mapbox` or
   `https` schemes with valid scheme-specific authorities.
-- GitHub Actions runs the same static `make check` baseline with Ruby 3.3,
-  Node 24-compatible pinned actions, read-only permissions, and a timeout.
+- `make check` also rejects Mapbox style URL credentials, `access_token` query
+  parameters, and incomplete `mapbox://styles/<owner>/<style>` paths.
+- `make check` also keeps Mapbox attribution and telemetry controls visible and
+  rejects the deprecated plist flag that claimed a separate in-app setting.
+- GitHub Actions runs the static contract on Ubuntu and the native policy tests
+  plus an unsigned x86_64 simulator build on macOS. Both jobs use pinned
+  checkout, read-only permissions, disabled credential persistence, and timeouts.
 - `VENDORED_FRAMEWORKS.sha256` verifies the checked-in Mapbox framework binary.
-- Legacy Xcode compilation is opt-in with `RUN_LEGACY_XCODE=1`; the default gate
-  does not claim modern Xcode compatibility for the archived project.
+- Xcode compilation is opt-in locally with `RUN_LEGACY_XCODE=1`; it uses the
+  checked-in Swift 4/iOS 12 baseline and x86_64 simulator architecture required
+  by the vendored Mapbox 3.1.2 framework.
 - The static checker also requires completed canonical plans under `docs/plans`.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
+
+The application bounds locally supplied tokens and style URLs, but Mapbox owns
+tile/style request execution and response parsing inside the vendored SDK. Run
+physical-device checks for provider errors, telemetry choice, permission
+changes, stale-location recovery, backgrounding, and real GPS accuracy before
+using the sample for a private event.
 
 ## Configuration and Secrets
 
@@ -137,6 +184,22 @@ When the required SDK or runtime is unavailable, use static checks and source re
   binary integrity and explicit legacy-build boundary.
 - See `docs/plans/2026-06-10-mapbox-style-url-authority.md` for configured
   style URL authority validation.
+- See `docs/plans/2026-06-12-mapbox-style-url-credential-path-validation.md`
+  for credential-free style URLs and complete Mapbox owner/style paths.
+- See `docs/plans/2026-06-12-location-authorization-transitions.md` for the
+  status-driven tracking transition contract.
+- See `docs/plans/2026-06-12-mapbox-secret-token-guard.md` for the tracked
+  Mapbox token formats guard and historical-alert boundary.
+- See `docs/plans/2026-06-13-mapbox-attribution-telemetry-controls.md` for the
+  required Mapbox attribution and telemetry controls.
+- See `docs/plans/2026-06-13-location-request-gating.md` for the initial
+  location authorization request boundary.
+- See `docs/plans/2026-06-14-make-root-override-protection.md` for the
+  caller-resistant, location-independent iOS validation root.
+- See `docs/plans/2026-06-17-configurable-demo-coordinates.md` for validated
+  local coordinate overrides and pairwise demo fallbacks.
+- See `docs/plans/2026-06-19-runtime-deep-review.md` for runtime policy, native
+  test, mutation, and Xcode evidence.
 
 ## Contributing
 

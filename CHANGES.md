@@ -1,11 +1,46 @@
 # Changes
 
+## 2026-06-19
+
+- Replaced the storyboard-created, pre-enabled Mapbox location view with a
+  runtime-owned map that is created only after a bounded public token passes
+  validation.
+- Added tested coordinate, style URL, token, authorization, freshness, future
+  skew, horizontal-accuracy, and stale-callback policies, including null-island
+  sentinel rejection.
+- Deferred location permission until the configured map screen is visible,
+  stopped tracking when it leaves, and added current authorization callbacks.
+- Added 20 native Swift policy tests, nine hostile mutations, a supported Swift
+  4/iOS 12 project baseline, and pinned macOS hosted Xcode verification.
+
+## 2026-06-17
+
+- Added validated local coordinate overrides for the map center and prize
+  marker, preserving pairwise reviewed demo fallbacks for invalid settings.
+
+## 2026-06-13
+
+- Changed initial map setup to request location authorization only from the
+  undetermined state and reuse the captured status for tracking setup.
+- Kept Mapbox attribution and telemetry controls explicitly visible and removed
+  the deprecated plist flag for a separate in-app metrics setting.
+
+## 2026-06-12
+
+- Made each location authorization transition consume its delegate-provided
+  status and reset Mapbox follow mode after denial or revocation.
+- Added a tracked-file guard for public and secret Mapbox token formats without
+  exposing matched values in checker output.
+- Rejected Mapbox style URL credentials, token query parameters, and incomplete
+  Mapbox owner/style paths while preserving credential-free HTTPS providers.
+
 ## 2026-06-10
 
 - Required scheme-appropriate authorities for locally configured Mapbox and
   HTTPS style URLs.
 - Added a least-privilege GitHub Actions workflow that installs Ruby 3.3 and
-  runs the static `make check` baseline with pinned Node 24-compatible actions.
+  runs the static `make check` baseline with pinned Node 24-compatible actions
+  and disabled checkout credential persistence.
 - Added SHA-256 integrity coverage for the vendored Mapbox framework binary.
 - Made legacy Xcode compilation explicit and fixed hosted validation to Ubuntu
   24.04 with concurrency cancellation.

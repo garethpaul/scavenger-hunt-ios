@@ -1,151 +1,237 @@
-//
-//  ViewController.swift
-//  engagement
-//
-//  Created by Gareth Paul Jones on 12/1/16.
-//  Copyright © 2016 Gareth Paul Jones. All rights reserved.
-//
-
-import UIKit
-import Mapbox
 import CoreLocation
+import Mapbox
+import UIKit
 
-class ViewController: UIViewController, CLLocationManagerDelegate, MGLMapViewDelegate {
-    
-    let locationManager = CLLocationManager()
-    var mapView: MGLMapView!
-    var logoView: UIImageView!
+final class ViewController: UIViewController, CLLocationManagerDelegate, MGLMapViewDelegate {
+    private let locationManager = CLLocationManager()
+    private var mapView: MGLMapView?
     private var didAddPrizeAnnotation = false
+    private var hasRequestedAuthorization = false
+    private var isAwaitingLocation = false
+    private var isViewVisible = false
+
+    private let demoMapCenterCoordinate = CLLocationCoordinate2D(
+        latitude: 37.890576,
+        longitude: -122.472104
+    )
+    private let demoPrizeCoordinate = CLLocationCoordinate2D(
+        latitude: 37.826815,
+        longitude: -122.4992434
+    )
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        locationManager.delegate = self
-        locationManager.requestWhenInUseAuthorization()
-        
-        logoView = UIImageView(frame: CGRect(x: 0, y: 10, width: 55, height: 40))
-        logoView.image = UIImage(named: "Logo")
-        logoView.frame.origin.x = (view.frame.size.width - logoView.frame.size.width) / 2
-        logoView.frame.origin.y = 20
-        
-        // Add the logo view to the navigation controller and bring it to the front.
-        navigationController?.view.addSubview(logoView)
-        navigationController?.view.bringSubview(toFront: logoView)
-        
-        // Setup Mapbox Treasure Map
-        
-        let styleURL = configuredMapStyleURL()
-        mapView = MGLMapView(frame: view.bounds,
-                                 styleURL: styleURL)
-        mapView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
 
-        mapView.setCenter(CLLocationCoordinate2D(latitude: 37.890576,
-                                    longitude: -122.472104),
-                                    zoomLevel: 11, animated: false)
-        mapView.delegate = self
-        
-        view.addSubview(mapView)
-        enableUserTrackingIfAuthorized()
+        navigationItem.titleView = UIImageView(image: UIImage(named: "Logo"))
+        locationManager.delegate = self
+        locationManager.desiredAccuracy = kCLLocationAccuracyHundredMeters
+        locationManager.distanceFilter = kCLDistanceFilterNone
+        configureMap()
     }
-    
+
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        
-        guard !didAddPrizeAnnotation else {
-            return
-        }
-        
-        // Add marker for Hawk Hill
-        let hawk = MGLPointAnnotation()
-        hawk.coordinate = CLLocationCoordinate2D(latitude: ("37.826815" as NSString).doubleValue,
-                                                 longitude: ("-122.4992434" as NSString).doubleValue)
-        hawk.title = "Prize"
-        mapView.addAnnotation(hawk)
-        mapView.selectAnnotation(hawk, animated: true)
-        didAddPrizeAnnotation = true
-        
-        
-        
-    }
-    
-    func mapView(_ mapView: MGLMapView, imageFor annotation: MGLAnnotation) -> MGLAnnotationImage? {
-        
-        let annotationTitle = annotation.title ?? nil
-        let imageName = annotationTitle == "Prize" ? "pin3" : "BluePin"
 
-        guard let baseImage = UIImage(named: imageName) else {
-            return nil
-        }
-        
-        let image = baseImage.withAlignmentRectInsets(UIEdgeInsetsMake(0, 0, baseImage.size.height/10, 0))
-        
-        let reuseIdentifier = annotationTitle ?? imageName
-        let annotationImage = MGLAnnotationImage(image: image, reuseIdentifier: reuseIdentifier)
-        
-        return annotationImage
-        
-    }
-    
-    
-    func mapView(_ mapView: MGLMapView, annotationCanShowCallout annotation: MGLAnnotation) -> Bool {
-        // Always allow callouts to popup when annotations are tapped.
-        return true
-    }
+        isViewVisible = true
+        addPrizeAnnotationIfNeeded()
 
-    private func enableUserTrackingIfAuthorized() {
         let status = CLLocationManager.authorizationStatus()
-        guard status == .authorizedWhenInUse || status == .authorizedAlways else {
-            return
-        }
-
-        mapView?.userTrackingMode = .follow
-    }
-
-    private func configuredMapStyleURL() -> URL? {
-        guard let styleURLString = Bundle.main.object(forInfoDictionaryKey: "MAPBOX_STYLE_URL") as? String else {
-            return nil
-        }
-
-        let trimmedStyleURL = styleURLString.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedStyleURL.isEmpty,
-              !trimmedStyleURL.contains("$("),
-              let styleURL = URL(string: trimmedStyleURL) else {
-            return nil
-        }
-
-        let allowedStyleURLSchemes = ["mapbox", "https"]
-        guard let styleURLScheme = styleURL.scheme?.lowercased(),
-              allowedStyleURLSchemes.contains(styleURLScheme) else {
-            return nil
-        }
-
-        if styleURLScheme == "mapbox" {
-            guard styleURL.host?.lowercased() == "styles" else {
-                return nil
-            }
+        let state = authorizationState(for: status)
+        if LocationTrackingPolicy.shouldRequestAuthorization(
+            status: state,
+            isViewVisible: isViewVisible,
+            isMapReady: mapView != nil,
+            hasRequestedAuthorization: hasRequestedAuthorization
+        ) {
+            hasRequestedAuthorization = true
+            locationManager.requestWhenInUseAuthorization()
         } else {
-            guard let styleURLHost = styleURL.host, !styleURLHost.isEmpty else {
-                return nil
-            }
+            synchronizeLocationTracking(for: status)
+        }
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+
+        isViewVisible = false
+        stopLocationTracking()
+    }
+
+    private func configureMap() {
+        guard let token = AppConfigurationPolicy.mapboxAccessToken(
+            from: Bundle.main.object(forInfoDictionaryKey: "MGLMapboxAccessToken")
+        ) else {
+            showConfigurationError()
+            return
         }
 
-        return styleURL
+        MGLAccountManager.setAccessToken(token)
+        let configuredMapView = MGLMapView(
+            frame: view.bounds,
+            styleURL: AppConfigurationPolicy.mapStyleURL(
+                from: Bundle.main.object(forInfoDictionaryKey: "MAPBOX_STYLE_URL")
+            )
+        )
+        configuredMapView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        configuredMapView.logoView.isHidden = false
+        configuredMapView.attributionButton.isHidden = false
+        configuredMapView.delegate = self
+
+        let center = AppConfigurationPolicy.coordinate(
+            latitudeValue: Bundle.main.object(forInfoDictionaryKey: "MAP_CENTER_LATITUDE"),
+            longitudeValue: Bundle.main.object(forInfoDictionaryKey: "MAP_CENTER_LONGITUDE"),
+            fallback: demoMapCenterCoordinate
+        )
+        configuredMapView.setCenter(center, zoomLevel: 11, animated: false)
+        view.addSubview(configuredMapView)
+        mapView = configuredMapView
     }
 
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
+    private func showConfigurationError() {
+        let label = UILabel(frame: view.bounds.insetBy(dx: 24, dy: 24))
+        label.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        label.numberOfLines = 0
+        label.textAlignment = .center
+        label.text = "Add a valid public Mapbox token in the local MapboxSecrets.xcconfig file."
+        view.addSubview(label)
     }
-    
-    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        guard locations.last != nil else {
+
+    private func addPrizeAnnotationIfNeeded() {
+        guard let mapView = mapView, !didAddPrizeAnnotation else {
             return
+        }
+
+        let prize = MGLPointAnnotation()
+        prize.coordinate = AppConfigurationPolicy.coordinate(
+            latitudeValue: Bundle.main.object(forInfoDictionaryKey: "PRIZE_LATITUDE"),
+            longitudeValue: Bundle.main.object(forInfoDictionaryKey: "PRIZE_LONGITUDE"),
+            fallback: demoPrizeCoordinate
+        )
+        prize.title = "Prize"
+        mapView.addAnnotation(prize)
+        mapView.selectAnnotation(prize, animated: true)
+        didAddPrizeAnnotation = true
+    }
+
+    private func synchronizeLocationTracking(for status: CLAuthorizationStatus) {
+        let state = authorizationState(for: status)
+        guard LocationTrackingPolicy.shouldStartUpdates(
+            status: state,
+            isViewVisible: isViewVisible,
+            isMapReady: mapView != nil
+        ) else {
+            stopLocationTracking()
+            return
+        }
+
+        guard !isAwaitingLocation else {
+            return
+        }
+
+        isAwaitingLocation = true
+        locationManager.startUpdatingLocation()
+    }
+
+    private func stopLocationTracking() {
+        isAwaitingLocation = false
+        locationManager.stopUpdatingLocation()
+        mapView?.setUserTrackingMode(.none, animated: false)
+        mapView?.showsUserLocation = false
+    }
+
+    private func authorizationState(for status: CLAuthorizationStatus) -> LocationAuthorizationState {
+        switch status {
+        case .notDetermined:
+            return .notDetermined
+        case .restricted:
+            return .restricted
+        case .denied:
+            return .denied
+        case .authorizedWhenInUse, .authorizedAlways:
+            return .authorized
         }
     }
 
     func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
-        enableUserTrackingIfAuthorized()
+        DispatchQueue.main.async { [weak self] in
+            self?.synchronizeLocationTracking(for: status)
+        }
     }
 
+    @available(iOS 14.0, *)
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        let status = manager.authorizationStatus
+        DispatchQueue.main.async { [weak self] in
+            self?.synchronizeLocationTracking(for: status)
+        }
+    }
 
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        let status = CLLocationManager.authorizationStatus()
+        let state = authorizationState(for: status)
+        let now = Date()
+        let candidate = locations
+            .filter {
+                LocationTrackingPolicy.shouldAccept(
+                    $0,
+                    status: state,
+                    isViewVisible: isViewVisible,
+                    isAwaitingLocation: isAwaitingLocation,
+                    now: now
+                )
+            }
+            .max { $0.timestamp < $1.timestamp }
+
+        guard let location = candidate else {
+            return
+        }
+
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self,
+                  self.isViewVisible,
+                  self.isAwaitingLocation else {
+                return
+            }
+
+            self.isAwaitingLocation = false
+            self.locationManager.stopUpdatingLocation()
+            self.mapView?.setCenter(location.coordinate, animated: false)
+            self.mapView?.showsUserLocation = true
+            self.mapView?.setUserTrackingMode(.follow, animated: false)
+        }
+    }
+
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        DispatchQueue.main.async { [weak self] in
+            self?.stopLocationTracking()
+        }
+    }
+
+    func mapView(_ mapView: MGLMapView, didUpdate userLocation: MGLUserLocation?) {
+        guard let location = userLocation?.location,
+              LocationSamplePolicy.accepts(location) else {
+            stopLocationTracking()
+            return
+        }
+    }
+
+    func mapView(_ mapView: MGLMapView, imageFor annotation: MGLAnnotation) -> MGLAnnotationImage? {
+        let annotationTitle = annotation.title ?? nil
+        let imageName = annotationTitle == "Prize" ? "pin3" : "BluePin"
+        guard let baseImage = UIImage(named: imageName) else {
+            return nil
+        }
+
+        let image = baseImage.withAlignmentRectInsets(
+            UIEdgeInsetsMake(0, 0, baseImage.size.height / 10, 0)
+        )
+        return MGLAnnotationImage(
+            image: image,
+            reuseIdentifier: annotationTitle ?? imageName
+        )
+    }
+
+    func mapView(_ mapView: MGLMapView, annotationCanShowCallout annotation: MGLAnnotation) -> Bool {
+        return true
+    }
 }

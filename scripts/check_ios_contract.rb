@@ -3,9 +3,32 @@
 
 require 'json'
 require 'digest'
+require 'open3'
+require 'yaml'
 
 ROOT = File.expand_path('..', __dir__)
 Dir.chdir(ROOT)
+
+def duplicate_yaml_keys(node, path = [], duplicates = [])
+  case node
+  when Psych::Nodes::Mapping
+    seen = {}
+    node.children.each_slice(2) do |key_node, value_node|
+      key = key_node.value
+      duplicates << (path + [key]).join('.') if seen[key]
+      seen[key] = true
+      duplicate_yaml_keys(value_node, path + [key], duplicates)
+    end
+  when Psych::Nodes::Sequence
+    node.children.each_with_index do |child, index|
+      duplicate_yaml_keys(child, path + [index.to_s], duplicates)
+    end
+  else
+    Array(node.children).each { |child| duplicate_yaml_keys(child, path, duplicates) } if node.respond_to?(:children)
+  end
+
+  duplicates
+end
 
 failures = []
 
@@ -14,10 +37,22 @@ canonical_plan = 'docs/plans/2026-06-08-scavenger-hunt-ios-baseline.md'
 signing_team_plan = 'docs/plans/2026-06-09-local-signing-team-guard.md'
 ci_plan = 'docs/plans/2026-06-10-ci-baseline.md'
 vendored_framework_plan = 'docs/plans/2026-06-10-vendored-framework-integrity.md'
+authorization_transition_plan = 'docs/plans/2026-06-12-location-authorization-transitions.md'
+mapbox_token_guard_plan = 'docs/plans/2026-06-12-mapbox-secret-token-guard.md'
+mapbox_attribution_plan = 'docs/plans/2026-06-13-mapbox-attribution-telemetry-controls.md'
+location_request_plan = 'docs/plans/2026-06-13-location-request-gating.md'
+make_root_plan = 'docs/plans/2026-06-14-make-root-override-protection.md'
+coordinate_plan = 'docs/plans/2026-06-17-configurable-demo-coordinates.md'
 failures << "#{canonical_plan} is missing" unless File.exist?(canonical_plan)
 failures << "#{signing_team_plan} is missing" unless File.exist?(signing_team_plan)
 failures << "#{ci_plan} is missing" unless File.exist?(ci_plan)
 failures << "#{vendored_framework_plan} is missing" unless File.exist?(vendored_framework_plan)
+failures << "#{authorization_transition_plan} is missing" unless File.exist?(authorization_transition_plan)
+failures << "#{mapbox_token_guard_plan} is missing" unless File.exist?(mapbox_token_guard_plan)
+failures << "#{mapbox_attribution_plan} is missing" unless File.exist?(mapbox_attribution_plan)
+failures << "#{location_request_plan} is missing" unless File.exist?(location_request_plan)
+failures << "#{make_root_plan} is missing" unless File.exist?(make_root_plan)
+failures << "#{coordinate_plan} is missing" unless File.exist?(coordinate_plan)
 failures << 'docs/plans must contain at least one completed plan' if docs_plans.empty?
 
 docs_plans.each do |plan_path|
@@ -45,8 +80,8 @@ if info_plist.include?('NSLocationAlways') ||
    info_plist.include?('NSLocationAlwaysAndWhenInUseUsageDescription')
   failures << 'engagement/Info.plist must not request always-on location authorization'
 end
-if info_plist.include?('<key>MGLMapboxMetricsEnabledSettingShownInApp </key>')
-  failures << 'MGLMapboxMetricsEnabledSettingShownInApp key must not contain trailing whitespace'
+if info_plist.include?('MGLMapboxMetricsEnabledSettingShownInApp')
+  failures << 'engagement/Info.plist must not retain the deprecated Mapbox metrics-setting flag'
 end
 if info_plist.include?('treaure')
   failures << 'NSLocationWhenInUseUsageDescription contains a typo'
@@ -59,6 +94,42 @@ unless File.read('engagement/MapboxSecrets.xcconfig.example').include?('replace-
 end
 unless File.read('engagement/MapboxSecrets.xcconfig.example').include?('MAPBOX_STYLE_URL =')
   failures << 'MapboxSecrets.xcconfig.example must expose optional MAPBOX_STYLE_URL configuration'
+end
+coordinate_keys = %w[MAP_CENTER_LATITUDE MAP_CENTER_LONGITUDE PRIZE_LATITUDE PRIZE_LONGITUDE]
+coordinate_keys.each do |key|
+  unless info_plist.include?("<key>#{key}</key>") && info_plist.include?("<string>$(#{key})</string>")
+    failures << "engagement/Info.plist must read #{key} from $(#{key})"
+  end
+  unless File.read('engagement/MapboxSecrets.xcconfig.example').include?("#{key} =")
+    failures << "MapboxSecrets.xcconfig.example must expose optional #{key} configuration"
+  end
+end
+
+tracked_files_output, tracked_files_error, tracked_files_status = Open3.capture3('git', 'ls-files', '-z')
+if tracked_files_status.success?
+  mapbox_token_pattern = /(?<![A-Za-z0-9])(?:pk|sk)\.[A-Za-z0-9._-]{20,}/
+  tracked_files_output.split("\0").each do |path|
+    next if path.start_with?('Pods/') || !File.file?(path)
+
+    contents = File.binread(path)
+    if contents.match?(mapbox_token_pattern)
+      failures << "#{path} must not contain a checked-in Mapbox token"
+    end
+  end
+else
+  failures << "unable to scan tracked files for Mapbox tokens: #{tracked_files_error.strip}"
+end
+
+checker_source = File.read(__FILE__)
+[
+  ['(?:pk|', 'sk)\\.'].join,
+  ["Open3.capture3('git', '", "ls-files', '-z')"].join,
+  ["path.start_with?('", "Pods/')"].join,
+  ['File.bin', 'read(path)'].join,
+  ['contents.match?(', 'mapbox_token_pattern)'].join,
+  ['must not contain a checked-in ', 'Mapbox token'].join
+].each do |fragment|
+  failures << "#{__FILE__} must retain Mapbox token guard fragment #{fragment.inspect}" unless checker_source.include?(fragment)
 end
 
 workspace = File.read('engagement.xcworkspace/contents.xcworkspacedata')
@@ -80,11 +151,16 @@ else
   failures << "#{shared_scheme_path} is missing"
 end
 
-tracked_user_state = `git ls-files '*xcuserdata*' '*.xcuserstate'`.split("\n").select do |path|
-  File.exist?(path)
-end
-unless tracked_user_state.empty?
-  failures << "developer-local Xcode user state must not be tracked: #{tracked_user_state.join(', ')}"
+tracked_user_state_output, tracked_user_state_error, tracked_user_state_status = Open3.capture3(
+  'git', 'ls-files', '*xcuserdata*', '*.xcuserstate'
+)
+if tracked_user_state_status.success?
+  tracked_user_state = tracked_user_state_output.split("\n").select { |path| File.exist?(path) }
+  unless tracked_user_state.empty?
+    failures << "developer-local Xcode user state must not be tracked: #{tracked_user_state.join(', ')}"
+  end
+else
+  failures << "unable to inspect tracked Xcode user state: #{tracked_user_state_error.strip}"
 end
 
 project_file = File.read('TreasureHunt.xcodeproj/project.pbxproj')
@@ -94,31 +170,106 @@ project_file.scan(/DEVELOPMENT_TEAM = ([^;]+);/).flatten.each do |team|
   end
 end
 
-workflow = File.exist?('.github/workflows/check.yml') ? File.read('.github/workflows/check.yml') : ''
-unless workflow.include?('actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10') &&
-       workflow.include?('ruby/setup-ruby@12fd324f1d0b43274fdc8130f6980590a667c455') &&
-       workflow.include?('ruby-version: "3.3"') &&
-       workflow.include?('runs-on: ubuntu-24.04') &&
-       workflow.include?('concurrency:') &&
-       workflow.include?('cancel-in-progress: true') &&
-       workflow.include?('permissions:') &&
-       workflow.include?('contents: read') &&
-       workflow.include?('timeout-minutes: 5') &&
-       workflow.include?('workflow_dispatch:') &&
-       workflow.include?('run: make check')
-  failures << 'GitHub Actions workflow must keep the pinned, least-privilege Ruby 3.3 check baseline'
-end
-workflow.scan(/^\s*uses:\s*([^@\s]+)@([^\s#]+)/).each do |action, revision|
-  unless revision.match?(/\A[a-f0-9]{40}\z/)
-    failures << "GitHub Actions action #{action} must be pinned to a full commit SHA"
-  end
+workflow_path = '.github/workflows/check.yml'
+workflow = File.exist?(workflow_path) ? File.read(workflow_path) : ''
+expected_workflow = {
+  'name' => 'Check',
+  'on' => {
+    'pull_request' => nil,
+    'push' => { 'branches' => ['master'] },
+    'workflow_dispatch' => nil
+  },
+  'permissions' => { 'contents' => 'read' },
+  'concurrency' => {
+    'group' => 'check-${{ github.workflow }}-${{ github.ref }}',
+    'cancel-in-progress' => true
+  },
+  'jobs' => {
+    'check' => {
+      'runs-on' => 'ubuntu-24.04',
+      'timeout-minutes' => 5,
+      'steps' => [
+        {
+          'name' => 'Check out repository',
+          'uses' => 'actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10',
+          'with' => { 'persist-credentials' => false }
+        },
+        {
+          'name' => 'Set up Ruby',
+          'uses' => 'ruby/setup-ruby@12fd324f1d0b43274fdc8130f6980590a667c455',
+          'with' => { 'ruby-version' => '3.3' }
+        },
+        {
+          'name' => 'Run static contract',
+          'run' => 'make check'
+        }
+      ]
+    },
+    'apple' => {
+      'runs-on' => 'macos-15',
+      'timeout-minutes' => 15,
+      'steps' => [
+        {
+          'name' => 'Check out repository',
+          'uses' => 'actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10',
+          'with' => { 'persist-credentials' => false }
+        },
+        {
+          'name' => 'Run policy tests and Xcode build',
+          'run' => 'RUN_LEGACY_XCODE=1 make check'
+        }
+      ]
+    }
+  }
+}
+
+begin
+  workflow_config = YAML.safe_load(workflow, aliases: false)
+  workflow_config['on'] = workflow_config.delete(true) if workflow_config.is_a?(Hash) && workflow_config.key?(true)
+  failures << 'GitHub Actions workflow must keep the exact pinned, least-privilege static and Apple validation baseline' unless workflow_config == expected_workflow
+
+  duplicate_keys = duplicate_yaml_keys(Psych.parse_stream(workflow))
+  failures << "GitHub Actions workflow contains duplicate YAML keys: #{duplicate_keys.join(', ')}" unless duplicate_keys.empty?
+rescue Psych::Exception => e
+  failures << "GitHub Actions workflow must be valid YAML: #{e.message}"
 end
 
 makefile = File.read('Makefile')
+root_declaration = 'override ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))'
+root_assignments = makefile.lines.map(&:chomp).grep(/\A(?:override\s+)?ROOT\s*[:?+]?=/)
+unless makefile.start_with?("#{root_declaration}\n") && root_assignments == [root_declaration]
+  failures << 'Makefile must define exactly one protected repository-derived ROOT declaration first'
+end
 unless makefile.include?('RUN_LEGACY_XCODE ?= 0') &&
        makefile.include?('xcodebuild is required when RUN_LEGACY_XCODE=1') &&
        makefile.include?('legacy Xcode build skipped')
   failures << 'Makefile must keep legacy Xcode compilation explicit and opt-in'
+end
+
+if File.exist?(make_root_plan)
+  root_plan = File.read(make_root_plan)
+  [
+    'Status: Completed',
+    '`make ROOT=/tmp check` passed',
+    'all five public Make aliases passed',
+    'Six hostile mutations were rejected',
+    'Ruby 3.3'
+  ].each do |evidence|
+    failures << "#{make_root_plan} must record verification evidence #{evidence.inspect}" unless root_plan.include?(evidence)
+  end
+end
+
+if File.exist?(coordinate_plan)
+  coordinate_plan_text = File.read(coordinate_plan)
+  [
+    'Status: Completed',
+    'focused coordinate contract passed',
+    'make check passed',
+    'Nine hostile coordinate mutations were rejected',
+    'Exact diff'
+  ].each do |evidence|
+    failures << "#{coordinate_plan} must record verification evidence #{evidence.inspect}" unless coordinate_plan_text.include?(evidence)
+  end
 end
 
 framework_manifest = 'VENDORED_FRAMEWORKS.sha256'
@@ -138,98 +289,166 @@ else
 end
 
 %w[README.md VISION.md SECURITY.md CHANGES.md].each do |doc_path|
-  unless File.read(doc_path).include?('GitHub Actions')
+  document = File.read(doc_path).gsub(/\s+/, ' ')
+  unless document.include?('GitHub Actions')
     failures << "#{doc_path} must document the GitHub Actions baseline"
+  end
+  unless document.include?('authorization transition')
+    failures << "#{doc_path} must document the location authorization transition contract"
+  end
+  unless document.include?('request location authorization only from the undetermined state')
+    failures << "#{doc_path} must document initial location authorization request gating"
+  end
+  unless document.include?('Mapbox token formats')
+    failures << "#{doc_path} must document the tracked Mapbox token format guard"
+  end
+  unless document.include?('Mapbox style URL credentials')
+    failures << "#{doc_path} must document the Mapbox style URL credential boundary"
+  end
+  unless document.include?('Mapbox attribution and telemetry controls')
+    failures << "#{doc_path} must document the Mapbox attribution and telemetry controls"
+  end
+  unless document.include?('validated local coordinate overrides')
+    failures << "#{doc_path} must document validated local coordinate overrides"
   end
 end
 
+unless File.read('README.md').include?(make_root_plan)
+  failures << "README.md must reference #{make_root_plan}"
+end
+unless File.read('README.md').include?(coordinate_plan)
+  failures << "README.md must reference #{coordinate_plan}"
+end
+
 view_controller = File.read('engagement/ViewController.swift')
-if view_controller.include?('URL(string: "")')
-  failures << 'ViewController.swift must not pass a blank Mapbox style URL'
+policy_path = 'Sources/ScavengerHuntPolicies/AppPolicy.swift'
+policy = File.exist?(policy_path) ? File.read(policy_path) : ''
+policy_tests = File.exist?('PolicyTests/AppPolicyTests.swift') ? File.read('PolicyTests/AppPolicyTests.swift') : ''
+storyboard = File.read('engagement/Base.lproj/Main.storyboard')
+
+unless project_file.include?('../Sources/ScavengerHuntPolicies/AppPolicy.swift') &&
+       project_file.include?('AppPolicy.swift in Sources')
+  failures << 'TreasureHunt.xcodeproj must compile the shared runtime policy source'
 end
-if view_controller.match?(/mapbox:\/\/styles\//)
-  failures << 'ViewController.swift must not contain a checked-in Mapbox style URL'
+unless project_file.scan('SWIFT_VERSION = 4.0;').length == 2 &&
+       project_file.scan('IPHONEOS_DEPLOYMENT_TARGET = 12.0;').length >= 2
+  failures << 'TreasureHunt.xcodeproj must use the supported Swift 4 and iOS 12 app baseline'
 end
-if view_controller.include?('let styleURL: URL? = nil')
-  failures << 'ViewController.swift must resolve Mapbox style URLs from local configuration'
+if storyboard.include?('customClass="MGLMapView"') || storyboard.include?('keyPath="showsUserLocation"')
+  failures << 'Main.storyboard must not instantiate or pre-enable a Mapbox location view before runtime validation'
 end
-unless view_controller.include?('private func configuredMapStyleURL() -> URL?')
-  failures << 'ViewController.swift must define an optional Mapbox style URL helper'
+unless info_plist.include?('while this screen is visible') && info_plist.include?('Mapbox may process map and location data')
+  failures << 'NSLocationWhenInUseUsageDescription must disclose visible-screen use and Mapbox processing'
 end
-unless view_controller.include?('Bundle.main.object(forInfoDictionaryKey: "MAPBOX_STYLE_URL")')
-  failures << 'ViewController.swift must read MAPBOX_STYLE_URL from Info.plist'
+
+unless view_controller.include?('AppConfigurationPolicy.mapboxAccessToken') &&
+       view_controller.include?('MGLAccountManager.setAccessToken(token)') &&
+       view_controller.index('MGLAccountManager.setAccessToken(token)') < view_controller.index('MGLMapView(')
+  failures << 'ViewController.swift must validate and install a public Mapbox token before constructing the map'
 end
-unless view_controller.include?('!trimmedStyleURL.contains("$(")')
-  failures << 'ViewController.swift must ignore unresolved MAPBOX_STYLE_URL build placeholders'
+unless view_controller.include?('AppConfigurationPolicy.mapStyleURL') &&
+       view_controller.include?('AppConfigurationPolicy.coordinate')
+  failures << 'ViewController.swift must use shared runtime policy for styles and coordinates'
 end
-unless view_controller.include?('let allowedStyleURLSchemes = ["mapbox", "https"]') &&
-       view_controller.include?('styleURL.scheme?.lowercased()') &&
-       view_controller.include?('allowedStyleURLSchemes.contains(styleURLScheme)')
-  failures << 'ViewController.swift must restrict configured Mapbox style URLs to mapbox or https schemes'
+unless view_controller.include?('configuredMapView.logoView.isHidden = false') &&
+       view_controller.include?('configuredMapView.attributionButton.isHidden = false')
+  failures << 'ViewController.swift must keep Mapbox logo, attribution, and telemetry controls visible'
 end
-unless view_controller.include?('styleURL.host?.lowercased() == "styles"')
-  failures << 'ViewController.swift must require the styles authority for mapbox style URLs'
+if view_controller.match?(/(?:logoView|attributionButton)\.isHidden\s*=\s*true/) ||
+   view_controller.match?(/(?:logoView|attributionButton)\.removeFromSuperview\s*\(/)
+  failures << 'ViewController.swift must not hide or remove Mapbox attribution and telemetry controls'
 end
-unless view_controller.include?('guard let styleURLHost = styleURL.host, !styleURLHost.isEmpty')
-  failures << 'ViewController.swift must require a host for https style URLs'
+unless view_controller.include?('navigationItem.titleView = UIImageView')
+  failures << 'ViewController.swift must keep the logo owned by its navigation item lifecycle'
 end
-if view_controller.match?(/annotation\.title!/)
-  failures << 'ViewController.swift must not force unwrap annotation titles'
-end
-if view_controller.include?('var image: UIImage!')
-  failures << 'ViewController.swift must not force unwrap marker images'
-end
-if view_controller.match?(/UIImage\(named:\s*"Logo"\)!/)
-  failures << 'ViewController.swift must not force unwrap the logo asset'
-end
-if view_controller.include?('manager.location!.coordinate')
-  failures << 'ViewController.swift must use didUpdateLocations values without force unwrapping manager.location'
-end
-if view_controller.match?(/print\s*\(\s*"locations\s*=/) ||
-   view_controller.match?(/print\s*\([^)]*\.latitude[^)]*\.longitude/m)
-  failures << 'ViewController.swift must not log precise user coordinates'
-end
-unless view_controller.include?('locationManager.delegate = self')
-  failures << 'ViewController.swift must assign the location manager delegate before requesting authorization'
-end
-unless view_controller.include?('locationManager.requestWhenInUseAuthorization()')
-  failures << 'ViewController.swift must request when-in-use location authorization'
+
+unless view_controller.include?('LocationTrackingPolicy.shouldRequestAuthorization') &&
+       view_controller.include?('locationManager.requestWhenInUseAuthorization()') &&
+       view_controller.include?('override func viewDidAppear')
+  failures << 'ViewController.swift must defer and gate when-in-use authorization until the map screen is visible'
 end
 if view_controller.include?('requestAlwaysAuthorization()')
   failures << 'ViewController.swift must not request always-on location authorization'
 end
-if view_controller.include?('mapView.userTrackingMode = .follow')
-  failures << 'ViewController.swift must not enable Mapbox user tracking before checking authorization'
+unless view_controller.include?('override func viewWillDisappear') &&
+       view_controller.include?('stopLocationTracking()') &&
+       view_controller.include?('isAwaitingLocation = false')
+  failures << 'ViewController.swift must stop and invalidate location ownership when leaving the screen'
 end
-unless view_controller.include?('private func enableUserTrackingIfAuthorized()')
-  failures << 'ViewController.swift must define an authorization-gated user tracking helper'
+unless view_controller.include?('LocationTrackingPolicy.shouldAccept') &&
+       view_controller.include?('.max { $0.timestamp < $1.timestamp }') &&
+       view_controller.include?('LocationSamplePolicy.accepts(location)')
+  failures << 'ViewController.swift must reject stale, inaccurate, or stale-session location callbacks'
 end
-unless view_controller.include?('CLLocationManager.authorizationStatus()')
-  failures << 'ViewController.swift must read CLLocationManager.authorizationStatus before following the user'
+unless view_controller.include?('func locationManagerDidChangeAuthorization') &&
+       view_controller.include?('didChangeAuthorization status: CLAuthorizationStatus')
+  failures << 'ViewController.swift must handle both current and legacy authorization callbacks'
 end
-unless view_controller.include?('func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus)')
-  failures << 'ViewController.swift must retry user tracking when location authorization changes'
+unless view_controller.scan('DispatchQueue.main.async').length >= 3
+  failures << 'ViewController.swift must marshal asynchronous location callbacks onto the main queue'
 end
-unless view_controller.include?('mapView?.userTrackingMode = .follow')
-  failures << 'ViewController.swift must enable user tracking through optional map access after authorization'
+unless view_controller.include?('mapView?.setUserTrackingMode(.none, animated: false)') &&
+       view_controller.include?('mapView?.showsUserLocation = false') &&
+       view_controller.include?('mapView?.setUserTrackingMode(.follow, animated: false)')
+  failures << 'ViewController.swift must explicitly own Mapbox location tracking transitions'
 end
-unless view_controller.include?('let annotationTitle = annotation.title ?? nil')
-  failures << 'ViewController.swift must flatten optional Mapbox annotation titles before reuse'
+
+unless policy.include?('maximumTokenLength = 1024') &&
+       policy.include?('token.hasPrefix("pk.")') &&
+       policy.include?('allowedTokenCharacters.inverted')
+  failures << 'AppPolicy.swift must bound and validate public Mapbox access tokens'
+end
+unless policy.include?('maximumStyleURLLength = 2048') &&
+       policy.include?('components.user == nil') &&
+       policy.include?('components.password == nil') &&
+       policy.include?('components.fragment == nil') &&
+       policy.include?('sensitiveQueryNames') &&
+       policy.include?('components.host?.lowercased() == "styles"') &&
+       policy.include?('components.count == 2')
+  failures << 'AppPolicy.swift must bound style URLs and reject credentials, fragments, and malformed Mapbox paths'
+end
+unless policy.include?('number.isFinite') &&
+       policy.include?('CLLocationCoordinate2DIsValid(coordinate)') &&
+       policy.include?('coordinate.latitude == 0 && coordinate.longitude == 0')
+  failures << 'AppPolicy.swift must reject non-finite, out-of-range, and null-island sentinel coordinates'
+end
+unless policy.include?('maximumAge: TimeInterval = 30') &&
+       policy.include?('maximumFutureSkew: TimeInterval = 5') &&
+       policy.include?('maximumHorizontalAccuracy: CLLocationAccuracy = 100')
+  failures << 'AppPolicy.swift must bound location freshness, future skew, and horizontal accuracy'
+end
+
+[
+  'testCoordinateRejectsNullIslandSentinel',
+  'testCoordinateRejectsNonFiniteValues',
+  'testMapboxTokenRejectsSecretsPlaceholdersAndControlCharacters',
+  'testMapStyleURLRejectsCredentialsAndSensitiveQueryItems',
+  'testMapStyleURLRejectsFragmentsAndOversizedValues',
+  'testRejectsStaleLocation',
+  'testRejectsImplausiblyFutureLocation',
+  'testStaleSessionCallbackIsRejected'
+].each do |test_name|
+  failures << "PolicyTests must retain #{test_name}" unless policy_tests.include?(test_name)
+end
+unless File.read('Makefile').include?('policy-mutation-test') &&
+       File.exist?('scripts/check_policy_mutations.rb') &&
+       File.read('scripts/check_policy_mutations.rb').include?('Killed #{mutations.length} policy mutations')
+  failures << 'Makefile must run the focused Swift policy mutation suite on macOS'
+end
+
+if view_controller.match?(/annotation\.title!/) || view_controller.include?('manager.location!.coordinate')
+  failures << 'ViewController.swift must not force unwrap annotation or location values'
+end
+if view_controller.match?(/print\s*\([^)]*(?:latitude|longitude|token)/mi)
+  failures << 'ViewController.swift must not log precise coordinates or credentials'
 end
 unless view_controller.include?('guard let baseImage = UIImage(named: imageName) else')
   failures << 'ViewController.swift must guard marker image loading'
 end
-unless view_controller.include?('let reuseIdentifier = annotationTitle ?? imageName')
-  failures << 'ViewController.swift must provide a fallback marker reuse identifier'
-end
-unless view_controller.include?('private var didAddPrizeAnnotation = false')
-  failures << 'ViewController.swift must track whether the prize annotation was already added'
-end
-unless view_controller.include?('guard !didAddPrizeAnnotation else')
+unless view_controller.include?('private var didAddPrizeAnnotation = false') &&
+       view_controller.include?('!didAddPrizeAnnotation') &&
+       view_controller.include?('didAddPrizeAnnotation = true')
   failures << 'ViewController.swift must not add duplicate prize annotations on repeated appearances'
-end
-unless view_controller.include?('didAddPrizeAnnotation = true')
-  failures << 'ViewController.swift must mark the prize annotation as added'
 end
 
 asset_names = Dir['engagement/Assets.xcassets/**/*.imageset'].map { |path| File.basename(path, '.imageset') }

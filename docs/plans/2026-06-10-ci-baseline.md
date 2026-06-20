@@ -15,7 +15,7 @@ contracts while Xcode builds remain a separate platform-specific check.
 - Added a GitHub Actions workflow that installs Ruby 3.3 and runs `make check`.
 - Pinned Node 24-compatible checkout and Ruby setup actions by verified SHA.
 - Restricted workflow permissions to read-only contents and bounded the job to
-  five minutes.
+  five minutes while disabling checkout credential persistence.
 - Extended the iOS contract checker and docs so the hosted CI path stays
   visible.
 
