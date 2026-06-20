@@ -49,7 +49,7 @@
 	<key>PRIZE_LONGITUDE</key>
 	<string>$(PRIZE_LONGITUDE)</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Helps you find your treasure on the map.</string>
+	<string>Your location is used while this screen is visible to center the map and help you find the treasure. Mapbox may process map and location data according to its telemetry settings.</string>
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>

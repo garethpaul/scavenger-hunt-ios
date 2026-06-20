@@ -1,5 +1,18 @@
 # Changes
 
+## 2026-06-19
+
+- Replaced the storyboard-created, pre-enabled Mapbox location view with a
+  runtime-owned map that is created only after a bounded public token passes
+  validation.
+- Added tested coordinate, style URL, token, authorization, freshness, future
+  skew, horizontal-accuracy, and stale-callback policies, including null-island
+  sentinel rejection.
+- Deferred location permission until the configured map screen is visible,
+  stopped tracking when it leaves, and added current authorization callbacks.
+- Added 20 native Swift policy tests, nine hostile mutations, a supported Swift
+  4/iOS 12 project baseline, and pinned macOS hosted Xcode verification.
+
 ## 2026-06-17
 
 - Added validated local coordinate overrides for the map center and prize

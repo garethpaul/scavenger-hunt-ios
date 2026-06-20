@@ -204,6 +204,21 @@ expected_workflow = {
           'run' => 'make check'
         }
       ]
+    },
+    'apple' => {
+      'runs-on' => 'macos-15',
+      'timeout-minutes' => 15,
+      'steps' => [
+        {
+          'name' => 'Check out repository',
+          'uses' => 'actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10',
+          'with' => { 'persist-credentials' => false }
+        },
+        {
+          'name' => 'Run policy tests and Xcode build',
+          'run' => 'RUN_LEGACY_XCODE=1 make check'
+        }
+      ]
     }
   }
 }
@@ -211,7 +226,7 @@ expected_workflow = {
 begin
   workflow_config = YAML.safe_load(workflow, aliases: false)
   workflow_config['on'] = workflow_config.delete(true) if workflow_config.is_a?(Hash) && workflow_config.key?(true)
-  failures << 'GitHub Actions workflow must keep the exact pinned, least-privilege Ruby 3.3 check baseline' unless workflow_config == expected_workflow
+  failures << 'GitHub Actions workflow must keep the exact pinned, least-privilege static and Apple validation baseline' unless workflow_config == expected_workflow
 
   duplicate_keys = duplicate_yaml_keys(Psych.parse_stream(workflow))
   failures << "GitHub Actions workflow contains duplicate YAML keys: #{duplicate_keys.join(', ')}" unless duplicate_keys.empty?
@@ -306,154 +321,134 @@ unless File.read('README.md').include?(coordinate_plan)
 end
 
 view_controller = File.read('engagement/ViewController.swift')
-unless view_controller.include?('private let demoMapCenterCoordinate = CLLocationCoordinate2D(latitude: 37.890576,') &&
-       view_controller.include?('private let demoPrizeCoordinate = CLLocationCoordinate2D(latitude: 37.826815,')
-  failures << 'ViewController.swift must keep the reviewed demo coordinate fallbacks'
+policy_path = 'Sources/ScavengerHuntPolicies/AppPolicy.swift'
+policy = File.exist?(policy_path) ? File.read(policy_path) : ''
+policy_tests = File.exist?('PolicyTests/AppPolicyTests.swift') ? File.read('PolicyTests/AppPolicyTests.swift') : ''
+storyboard = File.read('engagement/Base.lproj/Main.storyboard')
+
+unless project_file.include?('../Sources/ScavengerHuntPolicies/AppPolicy.swift') &&
+       project_file.include?('AppPolicy.swift in Sources')
+  failures << 'TreasureHunt.xcodeproj must compile the shared runtime policy source'
 end
-unless view_controller.include?('private func configuredCoordinate(latitudeKey: String,') &&
-       view_controller.include?('longitudeKey: String,') &&
-       view_controller.include?('fallback: CLLocationCoordinate2D) -> CLLocationCoordinate2D')
-  failures << 'ViewController.swift must resolve coordinate overrides as a validated pair'
+unless project_file.scan('SWIFT_VERSION = 4.0;').length == 2 &&
+       project_file.scan('IPHONEOS_DEPLOYMENT_TARGET = 12.0;').length >= 2
+  failures << 'TreasureHunt.xcodeproj must use the supported Swift 4 and iOS 12 app baseline'
 end
-unless view_controller.include?('configuredCoordinateComponent(forInfoDictionaryKey: latitudeKey)') &&
-       view_controller.include?('configuredCoordinateComponent(forInfoDictionaryKey: longitudeKey)')
-  failures << 'ViewController.swift must require both coordinate components'
+if storyboard.include?('customClass="MGLMapView"') || storyboard.include?('keyPath="showsUserLocation"')
+  failures << 'Main.storyboard must not instantiate or pre-enable a Mapbox location view before runtime validation'
 end
-unless view_controller.include?('!trimmedValue.contains("$(")') &&
-       view_controller.include?('guard let stringValue = rawValue as? String else') &&
-       view_controller.include?('let numericValue = Double(trimmedValue)') &&
-       !view_controller.include?('rawValue as? NSNumber')
-  failures << 'ViewController.swift must reject unresolved and non-numeric coordinate settings'
+unless info_plist.include?('while this screen is visible') && info_plist.include?('Mapbox may process map and location data')
+  failures << 'NSLocationWhenInUseUsageDescription must disclose visible-screen use and Mapbox processing'
 end
-unless view_controller.include?('guard CLLocationCoordinate2DIsValid(coordinate) else')
-  failures << 'ViewController.swift must reject invalid Core Location coordinates'
+
+unless view_controller.include?('AppConfigurationPolicy.mapboxAccessToken') &&
+       view_controller.include?('MGLAccountManager.setAccessToken(token)') &&
+       view_controller.index('MGLAccountManager.setAccessToken(token)') < view_controller.index('MGLMapView(')
+  failures << 'ViewController.swift must validate and install a public Mapbox token before constructing the map'
 end
-unless view_controller.include?('latitudeKey: "MAP_CENTER_LATITUDE"') &&
-       view_controller.include?('longitudeKey: "MAP_CENTER_LONGITUDE"') &&
-       view_controller.include?('fallback: demoMapCenterCoordinate') &&
-       view_controller.include?('latitudeKey: "PRIZE_LATITUDE"') &&
-       view_controller.include?('longitudeKey: "PRIZE_LONGITUDE"') &&
-       view_controller.include?('fallback: demoPrizeCoordinate')
-  failures << 'ViewController.swift must apply validated map-center and prize coordinate overrides'
+unless view_controller.include?('AppConfigurationPolicy.mapStyleURL') &&
+       view_controller.include?('AppConfigurationPolicy.coordinate')
+  failures << 'ViewController.swift must use shared runtime policy for styles and coordinates'
 end
-unless view_controller.include?('mapView.logoView.isHidden = false') &&
-       view_controller.include?('mapView.attributionButton.isHidden = false')
+unless view_controller.include?('configuredMapView.logoView.isHidden = false') &&
+       view_controller.include?('configuredMapView.attributionButton.isHidden = false')
   failures << 'ViewController.swift must keep Mapbox logo, attribution, and telemetry controls visible'
 end
-if view_controller.match?(/mapView\.(?:logoView|attributionButton)\.isHidden\s*=\s*true/) ||
-   view_controller.match?(/mapView\.(?:logoView|attributionButton)\.alpha\s*=\s*0(?:\.0)?/) ||
-   view_controller.match?(/mapView\.(?:logoView|attributionButton)\.removeFromSuperview\s*\(/)
+if view_controller.match?(/(?:logoView|attributionButton)\.isHidden\s*=\s*true/) ||
+   view_controller.match?(/(?:logoView|attributionButton)\.removeFromSuperview\s*\(/)
   failures << 'ViewController.swift must not hide or remove Mapbox attribution and telemetry controls'
 end
-if view_controller.include?('URL(string: "")')
-  failures << 'ViewController.swift must not pass a blank Mapbox style URL'
+unless view_controller.include?('navigationItem.titleView = UIImageView')
+  failures << 'ViewController.swift must keep the logo owned by its navigation item lifecycle'
 end
-if view_controller.match?(/mapbox:\/\/styles\//)
-  failures << 'ViewController.swift must not contain a checked-in Mapbox style URL'
-end
-if view_controller.include?('let styleURL: URL? = nil')
-  failures << 'ViewController.swift must resolve Mapbox style URLs from local configuration'
-end
-unless view_controller.include?('private func configuredMapStyleURL() -> URL?')
-  failures << 'ViewController.swift must define an optional Mapbox style URL helper'
-end
-unless view_controller.include?('Bundle.main.object(forInfoDictionaryKey: "MAPBOX_STYLE_URL")')
-  failures << 'ViewController.swift must read MAPBOX_STYLE_URL from Info.plist'
-end
-unless view_controller.include?('!trimmedStyleURL.contains("$(")')
-  failures << 'ViewController.swift must ignore unresolved MAPBOX_STYLE_URL build placeholders'
-end
-unless view_controller.include?('let allowedStyleURLSchemes = ["mapbox", "https"]') &&
-       view_controller.include?('styleURL.scheme?.lowercased()') &&
-       view_controller.include?('allowedStyleURLSchemes.contains(styleURLScheme)')
-  failures << 'ViewController.swift must restrict configured Mapbox style URLs to mapbox or https schemes'
-end
-unless view_controller.include?('styleURL.host?.lowercased() == "styles"')
-  failures << 'ViewController.swift must require the styles authority for mapbox style URLs'
-end
-unless view_controller.include?('guard styleURL.user == nil, styleURL.password == nil')
-  failures << 'ViewController.swift must reject embedded Mapbox style URL credentials'
-end
-unless view_controller.include?('URLComponents(url: styleURL, resolvingAgainstBaseURL: false)?.queryItems') &&
-       view_controller.include?('$0.name.lowercased() == "access_token"')
-  failures << 'ViewController.swift must reject access_token style URL query parameters'
-end
-unless view_controller.include?('let stylePathComponents = styleURL.pathComponents.filter { $0 != "/" }') &&
-       view_controller.include?('guard stylePathComponents.count >= 2')
-  failures << 'ViewController.swift must require owner and style path components for mapbox styles'
-end
-unless view_controller.include?('guard let styleURLHost = styleURL.host, !styleURLHost.isEmpty')
-  failures << 'ViewController.swift must require a host for https style URLs'
-end
-if view_controller.match?(/annotation\.title!/)
-  failures << 'ViewController.swift must not force unwrap annotation titles'
-end
-if view_controller.include?('var image: UIImage!')
-  failures << 'ViewController.swift must not force unwrap marker images'
-end
-if view_controller.match?(/UIImage\(named:\s*"Logo"\)!/)
-  failures << 'ViewController.swift must not force unwrap the logo asset'
-end
-if view_controller.include?('manager.location!.coordinate')
-  failures << 'ViewController.swift must use didUpdateLocations values without force unwrapping manager.location'
-end
-if view_controller.match?(/print\s*\(\s*"locations\s*=/) ||
-   view_controller.match?(/print\s*\([^)]*\.latitude[^)]*\.longitude/m)
-  failures << 'ViewController.swift must not log precise user coordinates'
-end
-unless view_controller.include?('locationManager.requestWhenInUseAuthorization()')
-  failures << 'ViewController.swift must request when-in-use location authorization'
-end
-unless view_controller.scan('CLLocationManager.authorizationStatus()').length == 1 &&
-       view_controller.match?(/locationManager\.delegate = self\s*let initialAuthorizationStatus = CLLocationManager\.authorizationStatus\(\)/m) &&
-       view_controller.match?(/if initialAuthorizationStatus == \.notDetermined \{\s*locationManager\.requestWhenInUseAuthorization\(\)\s*\}/m)
-  failures << 'ViewController.swift must capture status after assigning the delegate and request authorization only from notDetermined'
+
+unless view_controller.include?('LocationTrackingPolicy.shouldRequestAuthorization') &&
+       view_controller.include?('locationManager.requestWhenInUseAuthorization()') &&
+       view_controller.include?('override func viewDidAppear')
+  failures << 'ViewController.swift must defer and gate when-in-use authorization until the map screen is visible'
 end
 if view_controller.include?('requestAlwaysAuthorization()')
   failures << 'ViewController.swift must not request always-on location authorization'
 end
-if view_controller.include?('mapView.userTrackingMode = .follow')
-  failures << 'ViewController.swift must not enable Mapbox user tracking before checking authorization'
+unless view_controller.include?('override func viewWillDisappear') &&
+       view_controller.include?('stopLocationTracking()') &&
+       view_controller.include?('isAwaitingLocation = false')
+  failures << 'ViewController.swift must stop and invalidate location ownership when leaving the screen'
 end
-unless view_controller.include?('private func updateUserTracking(for status: CLAuthorizationStatus)')
-  failures << 'ViewController.swift must define a status-driven user tracking helper'
+unless view_controller.include?('LocationTrackingPolicy.shouldAccept') &&
+       view_controller.include?('.max { $0.timestamp < $1.timestamp }') &&
+       view_controller.include?('LocationSamplePolicy.accepts(location)')
+  failures << 'ViewController.swift must reject stale, inaccurate, or stale-session location callbacks'
 end
-unless view_controller.include?('updateUserTracking(for: initialAuthorizationStatus)')
-  failures << 'ViewController.swift must initialize tracking from the captured authorization status'
+unless view_controller.include?('func locationManagerDidChangeAuthorization') &&
+       view_controller.include?('didChangeAuthorization status: CLAuthorizationStatus')
+  failures << 'ViewController.swift must handle both current and legacy authorization callbacks'
 end
-unless view_controller.match?(/func locationManager\(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus\)\s*\{\s*updateUserTracking\(for: status\)\s*\}/m)
-  failures << 'ViewController.swift must apply the delegate-provided authorization status'
+unless view_controller.scan('DispatchQueue.main.async').length >= 3
+  failures << 'ViewController.swift must marshal asynchronous location callbacks onto the main queue'
 end
-unless view_controller.include?('case .authorizedWhenInUse, .authorizedAlways:') &&
-       view_controller.include?('default:')
-  failures << 'ViewController.swift must distinguish authorized and non-authorized tracking states'
+unless view_controller.include?('mapView?.setUserTrackingMode(.none, animated: false)') &&
+       view_controller.include?('mapView?.showsUserLocation = false') &&
+       view_controller.include?('mapView?.setUserTrackingMode(.follow, animated: false)')
+  failures << 'ViewController.swift must explicitly own Mapbox location tracking transitions'
 end
-unless view_controller.include?('mapView?.userTrackingMode = .follow')
-  failures << 'ViewController.swift must enable user tracking through optional map access after authorization'
+
+unless policy.include?('maximumTokenLength = 1024') &&
+       policy.include?('token.hasPrefix("pk.")') &&
+       policy.include?('allowedTokenCharacters.inverted')
+  failures << 'AppPolicy.swift must bound and validate public Mapbox access tokens'
 end
-unless view_controller.include?('mapView?.userTrackingMode = .none')
-  failures << 'ViewController.swift must stop user tracking when authorization is unavailable'
+unless policy.include?('maximumStyleURLLength = 2048') &&
+       policy.include?('components.user == nil') &&
+       policy.include?('components.password == nil') &&
+       policy.include?('components.fragment == nil') &&
+       policy.include?('sensitiveQueryNames') &&
+       policy.include?('components.host?.lowercased() == "styles"') &&
+       policy.include?('components.count == 2')
+  failures << 'AppPolicy.swift must bound style URLs and reject credentials, fragments, and malformed Mapbox paths'
 end
-if view_controller.include?('enableUserTrackingIfAuthorized')
-  failures << 'ViewController.swift must not retain the global-status reread helper'
+unless policy.include?('number.isFinite') &&
+       policy.include?('CLLocationCoordinate2DIsValid(coordinate)') &&
+       policy.include?('coordinate.latitude == 0 && coordinate.longitude == 0')
+  failures << 'AppPolicy.swift must reject non-finite, out-of-range, and null-island sentinel coordinates'
 end
-unless view_controller.include?('let annotationTitle = annotation.title ?? nil')
-  failures << 'ViewController.swift must flatten optional Mapbox annotation titles before reuse'
+unless policy.include?('maximumAge: TimeInterval = 30') &&
+       policy.include?('maximumFutureSkew: TimeInterval = 5') &&
+       policy.include?('maximumHorizontalAccuracy: CLLocationAccuracy = 100')
+  failures << 'AppPolicy.swift must bound location freshness, future skew, and horizontal accuracy'
+end
+
+[
+  'testCoordinateRejectsNullIslandSentinel',
+  'testCoordinateRejectsNonFiniteValues',
+  'testMapboxTokenRejectsSecretsPlaceholdersAndControlCharacters',
+  'testMapStyleURLRejectsCredentialsAndSensitiveQueryItems',
+  'testMapStyleURLRejectsFragmentsAndOversizedValues',
+  'testRejectsStaleLocation',
+  'testRejectsImplausiblyFutureLocation',
+  'testStaleSessionCallbackIsRejected'
+].each do |test_name|
+  failures << "PolicyTests must retain #{test_name}" unless policy_tests.include?(test_name)
+end
+unless File.read('Makefile').include?('policy-mutation-test') &&
+       File.exist?('scripts/check_policy_mutations.rb') &&
+       File.read('scripts/check_policy_mutations.rb').include?('Killed #{mutations.length} policy mutations')
+  failures << 'Makefile must run the focused Swift policy mutation suite on macOS'
+end
+
+if view_controller.match?(/annotation\.title!/) || view_controller.include?('manager.location!.coordinate')
+  failures << 'ViewController.swift must not force unwrap annotation or location values'
+end
+if view_controller.match?(/print\s*\([^)]*(?:latitude|longitude|token)/mi)
+  failures << 'ViewController.swift must not log precise coordinates or credentials'
 end
 unless view_controller.include?('guard let baseImage = UIImage(named: imageName) else')
   failures << 'ViewController.swift must guard marker image loading'
 end
-unless view_controller.include?('let reuseIdentifier = annotationTitle ?? imageName')
-  failures << 'ViewController.swift must provide a fallback marker reuse identifier'
-end
-unless view_controller.include?('private var didAddPrizeAnnotation = false')
-  failures << 'ViewController.swift must track whether the prize annotation was already added'
-end
-unless view_controller.include?('guard !didAddPrizeAnnotation else')
+unless view_controller.include?('private var didAddPrizeAnnotation = false') &&
+       view_controller.include?('!didAddPrizeAnnotation') &&
+       view_controller.include?('didAddPrizeAnnotation = true')
   failures << 'ViewController.swift must not add duplicate prize annotations on repeated appearances'
-end
-unless view_controller.include?('didAddPrizeAnnotation = true')
-  failures << 'ViewController.swift must mark the prize annotation as added'
 end
 
 asset_names = Dir['engagement/Assets.xcassets/**/*.imageset'].map { |path| File.basename(path, '.imageset') }

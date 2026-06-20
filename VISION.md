@@ -32,15 +32,20 @@ Priority:
   undetermined state
 - Keep validated local coordinate overrides pairwise and preserve reviewed demo
   fallbacks when local event values are incomplete or invalid
+- Reject non-finite, out-of-range, and exact null-island sentinel coordinates
+- Accept location samples only while the map screen owns an active foreground
+  request and only when freshness and accuracy bounds pass
 - Avoid logging precise user coordinates
 - Keep Xcode workspace and scheme metadata portable across machines
 - Keep account-specific Xcode signing teams out of source control
 - Keep completed maintenance plans under `docs/plans`
-- Keep GitHub Actions running the static `make check` baseline
+- Keep GitHub Actions running static, native Swift policy, mutation, and Xcode
+  build gates
 - Keep the vendored Mapbox framework covered by a reviewed SHA-256 digest
 - Reject public and secret Mapbox token formats from tracked non-vendored files
 - Keep Mapbox attribution and telemetry controls visible on the map
-- Treat Swift and CocoaPods versions as legacy until documented
+- Keep the Swift 4/iOS 12 source baseline buildable while the vendored Mapbox
+  framework remains limited to legacy device and x86_64 simulator slices
 
 Next priorities:
 
