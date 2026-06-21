@@ -42,6 +42,7 @@ mapbox_token_guard_plan = 'docs/plans/2026-06-12-mapbox-secret-token-guard.md'
 mapbox_attribution_plan = 'docs/plans/2026-06-13-mapbox-attribution-telemetry-controls.md'
 location_request_plan = 'docs/plans/2026-06-13-location-request-gating.md'
 make_root_plan = 'docs/plans/2026-06-14-make-root-override-protection.md'
+make_authority_plan = 'docs/plans/2026-06-21-make-authority-isolation.md'
 coordinate_plan = 'docs/plans/2026-06-17-configurable-demo-coordinates.md'
 failures << "#{canonical_plan} is missing" unless File.exist?(canonical_plan)
 failures << "#{signing_team_plan} is missing" unless File.exist?(signing_team_plan)
@@ -52,6 +53,7 @@ failures << "#{mapbox_token_guard_plan} is missing" unless File.exist?(mapbox_to
 failures << "#{mapbox_attribution_plan} is missing" unless File.exist?(mapbox_attribution_plan)
 failures << "#{location_request_plan} is missing" unless File.exist?(location_request_plan)
 failures << "#{make_root_plan} is missing" unless File.exist?(make_root_plan)
+failures << "#{make_authority_plan} is missing" unless File.exist?(make_authority_plan)
 failures << "#{coordinate_plan} is missing" unless File.exist?(coordinate_plan)
 failures << 'docs/plans must contain at least one completed plan' if docs_plans.empty?
 
@@ -235,15 +237,51 @@ rescue Psych::Exception => e
 end
 
 makefile = File.read('Makefile')
-root_declaration = 'override ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))'
+root_declaration = %q(override ROOT := $(shell path='$(subst ','"'"',$(MAKEFILE_LIST))'; path=$$(printf '%s' "$$path" | /bin/sed 's/^ //'); [ -f "$$path" ] || exit 1; directory=$$(/usr/bin/dirname -- "$$path"); CDPATH= cd -- "$$directory" && /bin/pwd -P))
 root_assignments = makefile.lines.map(&:chomp).grep(/\A(?:override\s+)?ROOT\s*[:?+]?=/)
-unless makefile.start_with?("#{root_declaration}\n") && root_assignments == [root_declaration]
-  failures << 'Makefile must define exactly one protected repository-derived ROOT declaration first'
+required_make_authority = [
+  'override SHELL := /bin/sh',
+  'override .SHELLFLAGS := -c',
+  'override RUBY := ruby',
+  'override SWIFT := swift',
+  'override SWIFT_TEST_FLAGS := --disable-index-store',
+  '$(error MAKEFILES must be empty; repository verification requires this Makefile to be loaded alone)',
+  'override MAKEFILES :=',
+  '$(error MAKEFILE_LIST must not be overridden)',
+  root_declaration,
+  'export ROOT',
+  'export RUN_LEGACY_XCODE',
+  'export XCODE_DERIVED_DATA',
+  '$(error repository Makefile path could not be resolved)',
+  'root-test:',
+  "\t/bin/sh \"$$ROOT/scripts/test-makefile-root.sh\"",
+  'verify: root-test lint test build'
+]
+makefile_lines = makefile.lines.map(&:chomp)
+unless root_assignments == [root_declaration] && required_make_authority.all? { |line| makefile_lines.include?(line) }
+  failures << 'Makefile must preserve the isolated repository-owned verification authority contract'
 end
 unless makefile.include?('RUN_LEGACY_XCODE ?= 0') &&
        makefile.include?('xcodebuild is required when RUN_LEGACY_XCODE=1') &&
        makefile.include?('legacy Xcode build skipped')
   failures << 'Makefile must keep legacy Xcode compilation explicit and opt-in'
+end
+
+root_test = 'scripts/test-makefile-root.sh'
+if File.exist?(root_test)
+  root_test_text = File.read(root_test)
+  ['104 executed target/authority cases', '2 inert configuration-data cases', 'MAKEFILE_LIST must not be overridden', 'MAKEFILES must be empty', 'repository Makefile path could not be resolved'].each do |evidence|
+    failures << "#{root_test} must preserve #{evidence.inspect}" unless root_test_text.include?(evidence)
+  end
+else
+  failures << "#{root_test} is missing"
+end
+
+if File.exist?(make_authority_plan)
+  authority_plan = File.read(make_authority_plan)
+  ['Status: Completed', '`make root-test` passed 104 target/authority cases', '`make check` passed from the repository and through an absolute Makefile path'].each do |evidence|
+    failures << "#{make_authority_plan} must record verification evidence #{evidence.inspect}" unless authority_plan.include?(evidence)
+  end
 end
 
 if File.exist?(make_root_plan)

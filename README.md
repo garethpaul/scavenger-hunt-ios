@@ -133,6 +133,9 @@ terms.
 - Xcode compilation is opt-in locally with `RUN_LEGACY_XCODE=1`; it uses the
   checked-in Swift 4/iOS 12 baseline and x86_64 simulator architecture required
   by the vendored Mapbox 3.1.2 framework.
+- `make root-test` proves every public Make target keeps its repository root,
+  shell, Ruby, Swift, and Swift flags under repository control while treating
+  Xcode opt-in and derived-data configuration as inert data.
 - The static checker also requires completed canonical plans under `docs/plans`.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
@@ -196,6 +199,8 @@ using the sample for a private event.
   location authorization request boundary.
 - See `docs/plans/2026-06-14-make-root-override-protection.md` for the
   caller-resistant, location-independent iOS validation root.
+- See `docs/plans/2026-06-21-make-authority-isolation.md` for isolated Make
+  authority and hostile-input regression coverage.
 - See `docs/plans/2026-06-17-configurable-demo-coordinates.md` for validated
   local coordinate overrides and pairwise demo fallbacks.
 - See `docs/plans/2026-06-19-runtime-deep-review.md` for runtime policy, native

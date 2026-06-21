@@ -1,5 +1,11 @@
 # Changes
 
+## 2026-06-21
+
+- Isolated Make verification authority from caller-controlled preload files,
+  file lists, shells, Ruby and Swift commands, Swift flags, and repository
+  roots, with 104 target/authority cases and inert Xcode configuration probes.
+
 ## 2026-06-19
 
 - Replaced the storyboard-created, pre-enabled Mapbox location view with a
