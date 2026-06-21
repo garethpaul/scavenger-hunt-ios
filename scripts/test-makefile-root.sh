@@ -13,7 +13,8 @@ COMMAND_LOG="$TEMP_ROOT/commands.log"
 BAD_COMMAND_LOG="$TEMP_ROOT/bad-command.log"
 FAKE_SHELL_LOG="$TEMP_ROOT/fake-shell.log"
 mkdir "$CONTROL_DIR" "$CHECKOUT" "$CHECKOUT/scripts" "$CHECKOUT/bin" "$ATTACKER_ROOT"
-CHECKOUT=$(CDPATH= cd -- "$CHECKOUT" && pwd -P)
+CONTROL_DIR=$(CDPATH= cd -- "$CONTROL_DIR" && /bin/pwd -P)
+CHECKOUT=$(CDPATH= cd -- "$CHECKOUT" && /bin/pwd -P)
 MAKEFILE="$CHECKOUT/Makefile"
 cp "$ROOT_DIR/Makefile" "$MAKEFILE"
 
