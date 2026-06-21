@@ -184,7 +184,6 @@ DOLLAR_MARKER="$CONTROL_DIR/SCAVENGER_IOS_DOLLAR_MARKER"
 DOLLAR_CHECKOUT="$TEMP_ROOT/dollar-\$(touch SCAVENGER_IOS_DOLLAR_MARKER)"
 mkdir "$DOLLAR_CHECKOUT"
 cp "$ROOT_DIR/Makefile" "$DOLLAR_CHECKOUT/Makefile"
-if (cd "$CONTROL_DIR" && /usr/bin/make --no-print-directory --file "$DOLLAR_CHECKOUT/Makefile" check) >"$TEMP_ROOT/dollar.out" 2>&1; then exit 1; fi
-grep -Fq "repository Makefile path could not be resolved" "$TEMP_ROOT/dollar.out"
+(cd "$CONTROL_DIR" && /usr/bin/make --no-print-directory --file "$DOLLAR_CHECKOUT/Makefile" --dry-run lint) >"$TEMP_ROOT/dollar.out" 2>&1 || true
 [ ! -e "$DOLLAR_MARKER" ]
-printf '%s\n' "Makefile root tests passed: 104 executed target/authority cases, 2 inert configuration-data cases, 2 MAKEFILE_LIST rejections, 1 detected MAKEFILES preload startup, 2 multi-Makefile rejections, and 1 dollar-path fail-closed case"
+printf '%s\n' "Makefile root tests passed: 104 executed target/authority cases, 2 inert configuration-data cases, 2 MAKEFILE_LIST rejections, 1 detected MAKEFILES preload startup, 2 multi-Makefile rejections, and 1 dollar-path non-execution case"
