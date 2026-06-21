@@ -1,5 +1,11 @@
 # Changes
 
+## 2026-06-21
+
+- Isolated Make verification authority from caller-controlled file lists,
+  shells, Ruby and Swift variables, Swift flags, repository roots, and trailing
+  target replacements, with explicit GNU Make preload-boundary coverage.
+
 ## 2026-06-19
 
 - Replaced the storyboard-created, pre-enabled Mapbox location view with a

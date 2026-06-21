@@ -1,25 +1,45 @@
-override ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
-RUBY ?= ruby
-RUN_LEGACY_XCODE ?= 0
-SWIFT ?= swift
-SWIFT_TEST_FLAGS ?= --disable-index-store
-XCODE_DERIVED_DATA ?= .build/XcodeDerivedData
+.PHONY: build check lint policy-mutation-test policy-test root-test test verify
+.SECONDEXPANSION:
 
-.PHONY: build check lint policy-mutation-test policy-test test verify
+override SHELL := /bin/sh
+override .SHELLFLAGS := -c
+override RUBY := ruby
+override SWIFT := swift
+override SWIFT_TEST_FLAGS := --disable-index-store
+ifneq ($(strip $(MAKEFILES)),)
+$(error MAKEFILES must be empty; repository verification requires this Makefile to be loaded alone)
+endif
+override MAKEFILES :=
+ifneq ($(origin MAKEFILE_LIST),file)
+$(error MAKEFILE_LIST must not be overridden)
+endif
+override ROOT := $(shell sed_path=/usr/bin/sed; [ -x "$$sed_path" ] || sed_path=/bin/sed; [ -x "$$sed_path" ] || exit 1; path=$$(printf '%s' '$(subst ','"'"',$(MAKEFILE_LIST))' | "$$sed_path" 's/^ //'); [ -f "$$path" ] || exit 1; directory=$${path%/*}; [ "$$directory" != "$$path" ] || directory=.; CDPATH= cd "$$directory" && pwd -P)
+export ROOT
+ifeq ($(strip $(ROOT)),)
+$(error repository Makefile path could not be resolved)
+endif
+
+build check lint policy-mutation-test policy-test root-test test verify: $$(if $$(filter file,$$(origin MAKEFILE_LIST)),,$$(error MAKEFILE_LIST must not be overridden))
+build check lint policy-mutation-test policy-test root-test test verify: $$(if $$(shell sed_path=/usr/bin/sed && [ -x "$$$$sed_path" ] || sed_path=/bin/sed && [ -x "$$$$sed_path" ] && path=$$$$(printf '%s' '$$(subst ','"'"',$$(MAKEFILE_LIST))' | "$$$$sed_path" 's/^ //') && [ -f "$$$$path" ] && printf '%s' ok),,$$(error repository Makefile must be loaded alone))
+
+RUN_LEGACY_XCODE ?= 0
+XCODE_DERIVED_DATA ?= .build/XcodeDerivedData
+export RUN_LEGACY_XCODE
+export XCODE_DERIVED_DATA
 
 lint:
-	cd "$(ROOT)" && $(RUBY) scripts/check_ios_contract.rb
+	cd "$$ROOT" && $(RUBY) scripts/check_ios_contract.rb
 
 policy-test:
 	@if [ "$$(uname -s)" = "Darwin" ]; then \
-		cd "$(ROOT)" && $(SWIFT) test $(SWIFT_TEST_FLAGS); \
+		cd "$$ROOT" && $(SWIFT) test $(SWIFT_TEST_FLAGS); \
 	else \
 		echo "Swift policy tests skipped; CoreLocation policies require macOS"; \
 	fi
 
 policy-mutation-test:
 	@if [ "$$(uname -s)" = "Darwin" ]; then \
-		cd "$(ROOT)" && $(RUBY) scripts/check_policy_mutations.rb; \
+		cd "$$ROOT" && $(RUBY) scripts/check_policy_mutations.rb; \
 	else \
 		echo "Swift policy mutations skipped; CoreLocation policies require macOS"; \
 	fi
@@ -27,13 +47,16 @@ policy-mutation-test:
 test: lint policy-test policy-mutation-test
 
 build:
-	@if [ "$(RUN_LEGACY_XCODE)" = "1" ]; then \
+	@if [ "$$RUN_LEGACY_XCODE" = "1" ]; then \
 		command -v xcodebuild >/dev/null 2>&1 || { echo "xcodebuild is required when RUN_LEGACY_XCODE=1"; exit 1; }; \
-		cd "$(ROOT)" && xcodebuild -workspace engagement.xcworkspace -scheme engagement -configuration Debug -sdk iphonesimulator -arch x86_64 -derivedDataPath "$(XCODE_DERIVED_DATA)" CODE_SIGNING_ALLOWED=NO COMPILER_INDEX_STORE_ENABLE=NO build ; \
+		cd "$$ROOT" && xcodebuild -workspace engagement.xcworkspace -scheme engagement -configuration Debug -sdk iphonesimulator -arch x86_64 -derivedDataPath "$$XCODE_DERIVED_DATA" CODE_SIGNING_ALLOWED=NO COMPILER_INDEX_STORE_ENABLE=NO build ; \
 	else \
 		echo "legacy Xcode build skipped; set RUN_LEGACY_XCODE=1 on a compatible macOS toolchain"; \
 	fi
 
-verify: lint test build
+root-test:
+	/bin/sh "$$ROOT/scripts/test-makefile-root.sh"
+
+verify: root-test lint test build
 
 check: verify
