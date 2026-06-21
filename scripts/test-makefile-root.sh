@@ -161,11 +161,30 @@ grep -Fq "MAKEFILE_LIST must not be overridden" "$TEMP_ROOT/command-list.out"
 if (cd "$CONTROL_DIR" && MAKEFILE_LIST=/tmp/untrusted /usr/bin/make --environment-overrides --no-print-directory --file "$MAKEFILE" check) >"$TEMP_ROOT/environment-list.out" 2>&1; then exit 1; fi
 grep -Fq "MAKEFILE_LIST must not be overridden" "$TEMP_ROOT/environment-list.out"
 PRELOADED="$TEMP_ROOT/preloaded.mk"
-printf '%s\n' 'ROOT := /tmp/preloaded' >"$PRELOADED"
+PRELOAD_MARKER="$TEMP_ROOT/preload-startup-ran"
+printf '%s\n' "\$(shell touch '$PRELOAD_MARKER')" 'ROOT := /tmp/preloaded' >"$PRELOADED"
 if (cd "$CONTROL_DIR" && MAKEFILES="$PRELOADED" /usr/bin/make --no-print-directory --file "$MAKEFILE" check) >"$TEMP_ROOT/preloaded.out" 2>&1; then exit 1; fi
 grep -Fq "MAKEFILES must be empty" "$TEMP_ROOT/preloaded.out"
+[ -e "$PRELOAD_MARKER" ]
 EARLIER="$TEMP_ROOT/earlier.mk"
 printf '%s\n' '# earlier' >"$EARLIER"
 if (cd "$CONTROL_DIR" && /usr/bin/make --no-print-directory --file "$EARLIER" --file "$MAKEFILE" check) >"$TEMP_ROOT/multiple.out" 2>&1; then exit 1; fi
 grep -Fq "repository Makefile path could not be resolved" "$TEMP_ROOT/multiple.out"
-printf '%s\n' "Makefile root tests passed: 104 executed target/authority cases, 2 inert configuration-data cases, 2 MAKEFILE_LIST rejections, 1 MAKEFILES rejection, and 1 multi-Makefile rejection"
+LATER="$TEMP_ROOT/later.mk"
+LATER_MARKER="$TEMP_ROOT/later-recipe-ran"
+cat >"$LATER" <<EOF
+.PHONY: check
+check:
+	@touch '$LATER_MARKER'
+EOF
+if (cd "$CONTROL_DIR" && /usr/bin/make --no-print-directory --file "$MAKEFILE" --file "$LATER" check) >"$TEMP_ROOT/later.out" 2>&1; then exit 1; fi
+grep -Fq "repository Makefile must be loaded alone" "$TEMP_ROOT/later.out"
+[ ! -e "$LATER_MARKER" ]
+DOLLAR_MARKER="$CONTROL_DIR/SCAVENGER_IOS_DOLLAR_MARKER"
+DOLLAR_CHECKOUT="$TEMP_ROOT/dollar-\$(touch SCAVENGER_IOS_DOLLAR_MARKER)"
+mkdir "$DOLLAR_CHECKOUT"
+cp "$ROOT_DIR/Makefile" "$DOLLAR_CHECKOUT/Makefile"
+if (cd "$CONTROL_DIR" && /usr/bin/make --no-print-directory --file "$DOLLAR_CHECKOUT/Makefile" check) >"$TEMP_ROOT/dollar.out" 2>&1; then exit 1; fi
+grep -Fq "repository Makefile path could not be resolved" "$TEMP_ROOT/dollar.out"
+[ ! -e "$DOLLAR_MARKER" ]
+printf '%s\n' "Makefile root tests passed: 104 executed target/authority cases, 2 inert configuration-data cases, 2 MAKEFILE_LIST rejections, 1 detected MAKEFILES preload startup, 2 multi-Makefile rejections, and 1 dollar-path fail-closed case"

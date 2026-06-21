@@ -237,11 +237,12 @@ rescue Psych::Exception => e
 end
 
 makefile = File.read('Makefile')
-root_declaration = %q(override ROOT := $(shell path='$(subst ','"'"',$(MAKEFILE_LIST))'; path=$$(printf '%s' "$$path" | /usr/bin/sed 's/^ //'); [ -f "$$path" ] || exit 1; directory=$$(/usr/bin/dirname -- "$$path"); CDPATH= cd -- "$$directory" && /bin/pwd -P))
+root_declaration = %q(override ROOT := $(shell sed_path=/usr/bin/sed; [ -x "$$sed_path" ] || sed_path=/bin/sed; [ -x "$$sed_path" ] || exit 1; path=$$(printf '%s' '$(subst ','"'"',$(MAKEFILE_LIST))' | "$$sed_path" 's/^ //'); [ -f "$$path" ] || exit 1; directory=$${path%/*}; [ "$$directory" != "$$path" ] || directory=.; CDPATH= cd "$$directory" && pwd -P))
 root_assignments = makefile.lines.map(&:chomp).grep(/\A(?:override\s+)?ROOT\s*[:?+]?=/)
 required_make_authority = [
   'override SHELL := /bin/sh',
   'override .SHELLFLAGS := -c',
+  '.SECONDEXPANSION:',
   'override RUBY := ruby',
   'override SWIFT := swift',
   'override SWIFT_TEST_FLAGS := --disable-index-store',
@@ -258,7 +259,10 @@ required_make_authority = [
   'verify: root-test lint test build'
 ]
 makefile_lines = makefile.lines.map(&:chomp)
-unless root_assignments == [root_declaration] && required_make_authority.all? { |line| makefile_lines.include?(line) }
+unless root_assignments == [root_declaration] &&
+       required_make_authority.all? { |line| makefile_lines.include?(line) } &&
+       makefile.include?('build check lint policy-mutation-test policy-test root-test test verify: $$(if $$(shell') &&
+       makefile.include?('$$(error repository Makefile must be loaded alone))')
   failures << 'Makefile must preserve the isolated repository-owned verification authority contract'
 end
 unless makefile.include?('RUN_LEGACY_XCODE ?= 0') &&
@@ -270,7 +274,7 @@ end
 root_test = 'scripts/test-makefile-root.sh'
 if File.exist?(root_test)
   root_test_text = File.read(root_test)
-  ['104 executed target/authority cases', '2 inert configuration-data cases', 'MAKEFILE_LIST must not be overridden', 'MAKEFILES must be empty', 'repository Makefile path could not be resolved'].each do |evidence|
+  ['104 executed target/authority cases', '2 inert configuration-data cases', 'MAKEFILE_LIST must not be overridden', 'MAKEFILES must be empty', 'repository Makefile path could not be resolved', 'repository Makefile must be loaded alone', 'detected MAKEFILES preload startup', '2 multi-Makefile rejections', '1 dollar-path fail-closed case'].each do |evidence|
     failures << "#{root_test} must preserve #{evidence.inspect}" unless root_test_text.include?(evidence)
   end
 else

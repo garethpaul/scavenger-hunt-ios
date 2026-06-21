@@ -2,9 +2,9 @@
 
 ## 2026-06-21
 
-- Isolated Make verification authority from caller-controlled preload files,
-  file lists, shells, Ruby and Swift commands, Swift flags, and repository
-  roots, with 104 target/authority cases and inert Xcode configuration probes.
+- Isolated Make verification authority from caller-controlled file lists,
+  shells, Ruby and Swift variables, Swift flags, repository roots, and trailing
+  target replacements, with explicit GNU Make preload-boundary coverage.
 
 ## 2026-06-19
 

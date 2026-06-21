@@ -19,17 +19,27 @@ bypass or replace the static, policy, mutation, and Xcode verification gates.
 
 ## Implementation
 
-- Hardened Make authority before any target definitions are evaluated.
+- Hardened Make authority before target recipes can run and added deferred
+  validation after every Makefile has been parsed.
 - Added a macOS-simulating `root-test` checkout with spaces, quotes, and
   command-substitution syntax in its path.
 - Covered all eight public targets across thirteen authority modes, two inert
-  Xcode configuration cases, and explicit file-list and preload rejections.
+  Xcode configuration cases, and explicit file-list, preload, and preceding and
+  trailing multiple-Makefile rejection cases.
 - Left Swift, Xcode project, CocoaPods, Mapbox, and application behavior intact.
+- Kept Ruby and Swift discovery on the provisioned `PATH`; local callers must
+  treat that path as trusted. Xcode remains the fixed `/usr/bin/xcodebuild` host tool.
+- Recorded the GNU Make startup boundary: a `MAKEFILES` preload is parsed before
+  this Makefile can reject it, so the guard prevents repository recipes but
+  cannot undo preload side effects.
+- Added a literal `$()` checkout-path probe that fails closed without executing
+  the apparent command substitution.
 
 ## Verification
 
 - `make root-test` passed 104 target/authority cases, two inert configuration
-  cases, and four explicit rejection cases.
+  cases, a detected preload startup, and five explicit rejection cases.
+- The literal `$()` checkout-path case failed closed without creating its marker.
 - `make check` passed from the repository and through an absolute Makefile path.
 - Ruby and shell syntax checks, `git diff --check`, and repository integrity
   screening passed.
