@@ -143,6 +143,111 @@ enum LocationAuthorizationState {
     case authorized
 }
 
+enum LocationTrackingStopReason {
+    case viewDisappeared
+    case authorizationLost
+    case managerFailed
+}
+
+enum MapboxLocationSampleResult: Int {
+    case accepted
+    case ignoredRecoverable
+    case ignoredStopped
+}
+
+enum LocationManagerFailureResult: Int {
+    case ignoredInactive
+    case ignoredRecoverable
+    case stopped
+}
+
+enum LocationManagerErrorPolicy {
+    static func isRecoverable(_ error: Error) -> Bool {
+        let error = error as NSError
+        return error.domain == kCLErrorDomain &&
+            error.code == CLError.locationUnknown.rawValue
+    }
+}
+
+struct LocationTrackingCoordinator {
+    private enum State {
+        case stopped
+        case awaitingOwnManagerLocation(generation: UInt64)
+        case mapboxTracking(generation: UInt64)
+    }
+
+    private var state: State = .stopped
+    private var lastGeneration: UInt64 = 0
+
+    var isAwaitingOwnManagerLocation: Bool {
+        if case .awaitingOwnManagerLocation = state {
+            return true
+        }
+        return false
+    }
+
+    var isMapboxTrackingEnabled: Bool {
+        if case .mapboxTracking = state {
+            return true
+        }
+        return false
+    }
+
+    mutating func startAwaitingOwnManagerLocation() -> UInt64? {
+        guard case .stopped = state, lastGeneration < UInt64.max else {
+            return nil
+        }
+
+        lastGeneration += 1
+        state = .awaitingOwnManagerLocation(generation: lastGeneration)
+        return lastGeneration
+    }
+
+    mutating func acceptOwnManagerSample(generation: UInt64) -> Bool {
+        guard case .awaitingOwnManagerLocation(let activeGeneration) = state,
+              activeGeneration == generation else {
+            return false
+        }
+
+        state = .mapboxTracking(generation: generation)
+        return true
+    }
+
+    mutating func handleOwnManagerFailure(
+        generation: UInt64,
+        isRecoverable: Bool
+    ) -> LocationManagerFailureResult {
+        guard case .awaitingOwnManagerLocation(let activeGeneration) = state,
+              activeGeneration == generation else {
+            return .ignoredInactive
+        }
+        guard !isRecoverable else {
+            return .ignoredRecoverable
+        }
+
+        state = .stopped
+        return .stopped
+    }
+
+    mutating func handleMapboxSample(
+        _ location: CLLocation?,
+        now: Date = Date()
+    ) -> MapboxLocationSampleResult {
+        guard case .mapboxTracking = state else {
+            return .ignoredStopped
+        }
+        guard let location = location, LocationSamplePolicy.accepts(location, now: now) else {
+            return .ignoredRecoverable
+        }
+
+        return .accepted
+    }
+
+    mutating func stop(reason: LocationTrackingStopReason) {
+        state = .stopped
+    }
+}
+
 enum LocationTrackingPolicy {
     static func shouldRequestAuthorization(
         status: LocationAuthorizationState,

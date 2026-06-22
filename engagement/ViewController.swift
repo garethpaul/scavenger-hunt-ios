@@ -2,13 +2,61 @@ import CoreLocation
 import Mapbox
 import UIKit
 
-final class ViewController: UIViewController, CLLocationManagerDelegate, MGLMapViewDelegate {
-    private let locationManager = CLLocationManager()
+fileprivate protocol LocationAcquisitionSessionDelegate: class {
+    func locationAcquisitionSession(
+        _ session: LocationAcquisitionSession,
+        didUpdateLocations locations: [CLLocation]
+    )
+    func locationAcquisitionSession(
+        _ session: LocationAcquisitionSession,
+        didFailWithError error: Error
+    )
+}
+
+fileprivate final class LocationAcquisitionSession: NSObject, CLLocationManagerDelegate {
+    let generation: UInt64
+
+    private weak var delegate: LocationAcquisitionSessionDelegate?
+    private let manager: CLLocationManager
+
+    init(generation: UInt64, delegate: LocationAcquisitionSessionDelegate) {
+        self.generation = generation
+        self.delegate = delegate
+        manager = CLLocationManager()
+        super.init()
+
+        manager.delegate = self
+        manager.desiredAccuracy = kCLLocationAccuracyHundredMeters
+        manager.distanceFilter = kCLDistanceFilterNone
+    }
+
+    func start() {
+        manager.startUpdatingLocation()
+    }
+
+    func stop() {
+        manager.stopUpdatingLocation()
+        manager.delegate = nil
+    }
+
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        delegate?.locationAcquisitionSession(self, didUpdateLocations: locations)
+    }
+
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        delegate?.locationAcquisitionSession(self, didFailWithError: error)
+    }
+}
+
+final class ViewController: UIViewController, CLLocationManagerDelegate, MGLMapViewDelegate,
+    LocationAcquisitionSessionDelegate {
+    private let authorizationManager = CLLocationManager()
+    private var locationAcquisitionSession: LocationAcquisitionSession?
     private var mapView: MGLMapView?
     private var didAddPrizeAnnotation = false
     private var hasRequestedAuthorization = false
-    private var isAwaitingLocation = false
     private var isViewVisible = false
+    private var locationTrackingCoordinator = LocationTrackingCoordinator()
 
     private let demoMapCenterCoordinate = CLLocationCoordinate2D(
         latitude: 37.890576,
@@ -23,9 +71,7 @@ final class ViewController: UIViewController, CLLocationManagerDelegate, MGLMapV
         super.viewDidLoad()
 
         navigationItem.titleView = UIImageView(image: UIImage(named: "Logo"))
-        locationManager.delegate = self
-        locationManager.desiredAccuracy = kCLLocationAccuracyHundredMeters
-        locationManager.distanceFilter = kCLDistanceFilterNone
+        authorizationManager.delegate = self
         configureMap()
     }
 
@@ -44,7 +90,7 @@ final class ViewController: UIViewController, CLLocationManagerDelegate, MGLMapV
             hasRequestedAuthorization: hasRequestedAuthorization
         ) {
             hasRequestedAuthorization = true
-            locationManager.requestWhenInUseAuthorization()
+            authorizationManager.requestWhenInUseAuthorization()
         } else {
             synchronizeLocationTracking(for: status)
         }
@@ -54,7 +100,7 @@ final class ViewController: UIViewController, CLLocationManagerDelegate, MGLMapV
         super.viewWillDisappear(animated)
 
         isViewVisible = false
-        stopLocationTracking()
+        stopLocationTracking(reason: .viewDisappeared)
     }
 
     private func configureMap() {
@@ -115,26 +161,35 @@ final class ViewController: UIViewController, CLLocationManagerDelegate, MGLMapV
 
     private func synchronizeLocationTracking(for status: CLAuthorizationStatus) {
         let state = authorizationState(for: status)
+        if state == .restricted || state == .denied {
+            stopLocationTracking(reason: .authorizationLost)
+            return
+        }
         guard LocationTrackingPolicy.shouldStartUpdates(
             status: state,
             isViewVisible: isViewVisible,
             isMapReady: mapView != nil
         ) else {
-            stopLocationTracking()
             return
         }
 
-        guard !isAwaitingLocation else {
+        guard let generation = locationTrackingCoordinator.startAwaitingOwnManagerLocation() else {
             return
         }
 
-        isAwaitingLocation = true
-        locationManager.startUpdatingLocation()
+        let session = LocationAcquisitionSession(generation: generation, delegate: self)
+        locationAcquisitionSession = session
+        session.start()
     }
 
-    private func stopLocationTracking() {
-        isAwaitingLocation = false
-        locationManager.stopUpdatingLocation()
+    private func stopLocationTracking(reason: LocationTrackingStopReason) {
+        locationTrackingCoordinator.stop(reason: reason)
+        locationAcquisitionSession?.stop()
+        locationAcquisitionSession = nil
+        stopMapboxPresentation()
+    }
+
+    private func stopMapboxPresentation() {
         mapView?.setUserTrackingMode(.none, animated: false)
         mapView?.showsUserLocation = false
     }
@@ -166,51 +221,71 @@ final class ViewController: UIViewController, CLLocationManagerDelegate, MGLMapV
         }
     }
 
-    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        let status = CLLocationManager.authorizationStatus()
-        let state = authorizationState(for: status)
-        let now = Date()
-        let candidate = locations
-            .filter {
-                LocationTrackingPolicy.shouldAccept(
-                    $0,
-                    status: state,
-                    isViewVisible: isViewVisible,
-                    isAwaitingLocation: isAwaitingLocation,
-                    now: now
-                )
-            }
-            .max { $0.timestamp < $1.timestamp }
-
-        guard let location = candidate else {
-            return
-        }
-
+    fileprivate func locationAcquisitionSession(
+        _ session: LocationAcquisitionSession,
+        didUpdateLocations locations: [CLLocation]
+    ) {
         DispatchQueue.main.async { [weak self] in
-            guard let self = self,
-                  self.isViewVisible,
-                  self.isAwaitingLocation else {
+            guard let self = self else {
                 return
             }
 
-            self.isAwaitingLocation = false
-            self.locationManager.stopUpdatingLocation()
+            let status = CLLocationManager.authorizationStatus()
+            let state = self.authorizationState(for: status)
+            let now = Date()
+            let candidate = locations
+                .filter {
+                    LocationTrackingPolicy.shouldAccept(
+                        $0,
+                        status: state,
+                        isViewVisible: self.isViewVisible,
+                        isAwaitingLocation: self.locationTrackingCoordinator.isAwaitingOwnManagerLocation,
+                        now: now
+                    )
+                }
+                .max { $0.timestamp < $1.timestamp }
+
+            guard let location = candidate,
+                  self.locationAcquisitionSession === session,
+                  self.locationTrackingCoordinator.acceptOwnManagerSample(
+                      generation: session.generation
+                  ) else {
+                return
+            }
+
+            session.stop()
+            self.locationAcquisitionSession = nil
             self.mapView?.setCenter(location.coordinate, animated: false)
             self.mapView?.showsUserLocation = true
             self.mapView?.setUserTrackingMode(.follow, animated: false)
         }
     }
 
-    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+    fileprivate func locationAcquisitionSession(
+        _ session: LocationAcquisitionSession,
+        didFailWithError error: Error
+    ) {
         DispatchQueue.main.async { [weak self] in
-            self?.stopLocationTracking()
+            guard let self = self else {
+                return
+            }
+
+            let result = self.locationTrackingCoordinator.handleOwnManagerFailure(
+                generation: session.generation,
+                isRecoverable: LocationManagerErrorPolicy.isRecoverable(error)
+            )
+            guard result == .stopped, self.locationAcquisitionSession === session else {
+                return
+            }
+
+            session.stop()
+            self.locationAcquisitionSession = nil
+            self.stopMapboxPresentation()
         }
     }
 
     func mapView(_ mapView: MGLMapView, didUpdate userLocation: MGLUserLocation?) {
-        guard let location = userLocation?.location,
-              LocationSamplePolicy.accepts(location) else {
-            stopLocationTracking()
+        guard locationTrackingCoordinator.handleMapboxSample(userLocation?.location) == .accepted else {
             return
         }
     }
