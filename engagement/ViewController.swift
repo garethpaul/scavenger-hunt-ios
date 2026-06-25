@@ -161,7 +161,7 @@ final class ViewController: UIViewController, CLLocationManagerDelegate, MGLMapV
 
     private func synchronizeLocationTracking(for status: CLAuthorizationStatus) {
         let state = authorizationState(for: status)
-        if state == .restricted || state == .denied {
+        guard state == .authorized else {
             stopLocationTracking(reason: .authorizationLost)
             return
         }

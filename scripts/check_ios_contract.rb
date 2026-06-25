@@ -428,6 +428,9 @@ unless view_controller.include?('func locationManagerDidChangeAuthorization') &&
        view_controller.include?('didChangeAuthorization status: CLAuthorizationStatus')
   failures << 'ViewController.swift must handle both current and legacy authorization callbacks'
 end
+unless view_controller.include?("guard state == .authorized else {\n            stopLocationTracking(reason: .authorizationLost)\n            return\n        }")
+  failures << 'ViewController.swift must stop location presentation for every non-authorized state'
+end
 unless view_controller.scan('DispatchQueue.main.async').length >= 3
   failures << 'ViewController.swift must marshal asynchronous location callbacks onto the main queue'
 end

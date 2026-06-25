@@ -1,5 +1,11 @@
 # Changes
 
+## 2026-06-25
+
+- Stopped active location sessions and Mapbox presentation when authorization
+  returns to any non-authorized state, including privacy resets to undetermined.
+- Added a source contract and hostile mutation for the authorization-reset path.
+
 ## 2026-06-21
 
 - Isolated Make verification authority from caller-controlled file lists,

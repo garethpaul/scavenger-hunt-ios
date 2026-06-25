@@ -62,8 +62,8 @@ integration_mutations = {
     'locationTrackingCoordinator.stop(reason: .viewDisappeared)'
   ],
   'skip the authorization terminal stop' => [
-    'stopLocationTracking(reason: .authorizationLost)',
-    'locationTrackingCoordinator.stop(reason: .authorizationLost)'
+    "guard state == .authorized else {\n            stopLocationTracking(reason: .authorizationLost)\n            return\n        }",
+    "if state == .restricted || state == .denied {\n            stopLocationTracking(reason: .authorizationLost)\n            return\n        }"
   ],
   'make locationUnknown terminal in production' => [
     'isRecoverable: LocationManagerErrorPolicy.isRecoverable(error)',
