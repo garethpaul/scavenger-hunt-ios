@@ -247,3 +247,161 @@ final class LocationTrackingPolicyTests: XCTestCase {
         ))
     }
 }
+
+final class LocationTrackingCoordinatorTests: XCTestCase {
+    private let now = Date(timeIntervalSince1970: 10_000)
+
+    func testRecoverableMapboxUpdatesPreserveTrackingUntilAValidSampleArrives() {
+        var coordinator = LocationTrackingCoordinator()
+
+        let generation = coordinator.startAwaitingOwnManagerLocation()
+        XCTAssertNotNil(generation)
+        XCTAssertTrue(coordinator.acceptOwnManagerSample(generation: generation!))
+        XCTAssertTrue(coordinator.isMapboxTrackingEnabled)
+
+        XCTAssertEqual(coordinator.handleMapboxSample(nil, now: now), .ignoredRecoverable)
+        XCTAssertTrue(coordinator.isMapboxTrackingEnabled)
+
+        XCTAssertEqual(
+            coordinator.handleMapboxSample(makeLocation(accuracy: 25, age: 31), now: now),
+            .ignoredRecoverable
+        )
+        XCTAssertEqual(
+            coordinator.handleMapboxSample(makeLocation(accuracy: 101, age: 5), now: now),
+            .ignoredRecoverable
+        )
+        XCTAssertTrue(coordinator.isMapboxTrackingEnabled)
+
+        XCTAssertEqual(
+            coordinator.handleMapboxSample(makeLocation(accuracy: 25, age: 5), now: now),
+            .accepted
+        )
+        XCTAssertTrue(coordinator.isMapboxTrackingEnabled)
+    }
+
+    func testTerminalStopsDisableTrackingAndRejectLaterSamples() {
+        let reasons: [LocationTrackingStopReason] = [
+            .viewDisappeared,
+            .authorizationLost,
+            .managerFailed,
+        ]
+
+        for reason in reasons {
+            var coordinator = LocationTrackingCoordinator()
+            let generation = coordinator.startAwaitingOwnManagerLocation()!
+            XCTAssertTrue(coordinator.acceptOwnManagerSample(generation: generation))
+
+            coordinator.stop(reason: reason)
+
+            XCTAssertFalse(coordinator.isAwaitingOwnManagerLocation)
+            XCTAssertFalse(coordinator.isMapboxTrackingEnabled)
+            XCTAssertFalse(coordinator.acceptOwnManagerSample(generation: generation))
+            XCTAssertEqual(
+                coordinator.handleOwnManagerFailure(generation: generation, isRecoverable: false),
+                .ignoredInactive
+            )
+            XCTAssertEqual(
+                coordinator.handleMapboxSample(makeLocation(accuracy: 25, age: 5), now: now),
+                .ignoredStopped
+            )
+        }
+    }
+
+    func testCoordinatorRequiresAnActiveOwnManagerSessionBeforeMapboxOwnership() {
+        var coordinator = LocationTrackingCoordinator()
+
+        XCTAssertFalse(coordinator.acceptOwnManagerSample(generation: 1))
+        XCTAssertFalse(coordinator.isMapboxTrackingEnabled)
+        XCTAssertNotNil(coordinator.startAwaitingOwnManagerLocation())
+        XCTAssertNil(coordinator.startAwaitingOwnManagerLocation())
+        XCTAssertTrue(coordinator.isAwaitingOwnManagerLocation)
+    }
+
+    func testDelayedGenerationOneSuccessAndFailureCannotClaimGenerationTwo() {
+        var coordinator = LocationTrackingCoordinator()
+        let generationOne = coordinator.startAwaitingOwnManagerLocation()!
+
+        coordinator.stop(reason: .viewDisappeared)
+        let generationTwo = coordinator.startAwaitingOwnManagerLocation()!
+
+        XCTAssertGreaterThan(generationTwo, generationOne)
+        XCTAssertFalse(coordinator.acceptOwnManagerSample(generation: generationOne))
+        XCTAssertEqual(
+            coordinator.handleOwnManagerFailure(generation: generationOne, isRecoverable: false),
+            .ignoredInactive
+        )
+        XCTAssertTrue(coordinator.isAwaitingOwnManagerLocation)
+        XCTAssertTrue(coordinator.acceptOwnManagerSample(generation: generationTwo))
+        XCTAssertTrue(coordinator.isMapboxTrackingEnabled)
+    }
+
+    func testCurrentGenerationTransfersOnlyOnceAndRejectsLaterManagerCallbacks() {
+        var coordinator = LocationTrackingCoordinator()
+        let generation = coordinator.startAwaitingOwnManagerLocation()!
+
+        XCTAssertTrue(coordinator.acceptOwnManagerSample(generation: generation))
+        XCTAssertFalse(coordinator.acceptOwnManagerSample(generation: generation))
+        XCTAssertEqual(
+            coordinator.handleOwnManagerFailure(generation: generation, isRecoverable: false),
+            .ignoredInactive
+        )
+        XCTAssertTrue(coordinator.isMapboxTrackingEnabled)
+    }
+
+    func testLocationUnknownIsRecoverableForCurrentGeneration() {
+        var coordinator = LocationTrackingCoordinator()
+        let generation = coordinator.startAwaitingOwnManagerLocation()!
+
+        let locationUnknown = NSError(
+            domain: kCLErrorDomain,
+            code: CLError.locationUnknown.rawValue,
+            userInfo: nil
+        )
+        let denied = NSError(
+            domain: kCLErrorDomain,
+            code: CLError.denied.rawValue,
+            userInfo: nil
+        )
+
+        XCTAssertTrue(LocationManagerErrorPolicy.isRecoverable(locationUnknown))
+        XCTAssertFalse(LocationManagerErrorPolicy.isRecoverable(denied))
+
+        XCTAssertEqual(
+            coordinator.handleOwnManagerFailure(generation: generation, isRecoverable: true),
+            .ignoredRecoverable
+        )
+        XCTAssertTrue(coordinator.isAwaitingOwnManagerLocation)
+        XCTAssertTrue(coordinator.acceptOwnManagerSample(generation: generation))
+        XCTAssertTrue(coordinator.isMapboxTrackingEnabled)
+    }
+
+    func testTerminalManagerFailureStopsOnlyTheCurrentAwaitingGeneration() {
+        var coordinator = LocationTrackingCoordinator()
+        let generationOne = coordinator.startAwaitingOwnManagerLocation()!
+
+        XCTAssertEqual(
+            coordinator.handleOwnManagerFailure(generation: generationOne, isRecoverable: false),
+            .stopped
+        )
+        XCTAssertFalse(coordinator.isAwaitingOwnManagerLocation)
+        XCTAssertFalse(coordinator.isMapboxTrackingEnabled)
+
+        let generationTwo = coordinator.startAwaitingOwnManagerLocation()!
+        XCTAssertGreaterThan(generationTwo, generationOne)
+        XCTAssertEqual(
+            coordinator.handleOwnManagerFailure(generation: generationOne, isRecoverable: false),
+            .ignoredInactive
+        )
+        XCTAssertTrue(coordinator.isAwaitingOwnManagerLocation)
+    }
+
+    private func makeLocation(accuracy: CLLocationAccuracy, age: TimeInterval) -> CLLocation {
+        return CLLocation(
+            coordinate: CLLocationCoordinate2D(latitude: 37.1, longitude: -122.2),
+            altitude: 0,
+            horizontalAccuracy: accuracy,
+            verticalAccuracy: 0,
+            timestamp: now.addingTimeInterval(-age)
+        )
+    }
+}

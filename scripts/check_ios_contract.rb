@@ -363,6 +363,7 @@ unless File.read('README.md').include?(coordinate_plan)
 end
 
 view_controller = File.read('engagement/ViewController.swift')
+mapbox_location_callback = view_controller[/func mapView\(_ mapView: MGLMapView, didUpdate userLocation: MGLUserLocation\?\) \{.*?^    \}/m].to_s
 policy_path = 'Sources/ScavengerHuntPolicies/AppPolicy.swift'
 policy = File.exist?(policy_path) ? File.read(policy_path) : ''
 policy_tests = File.exist?('PolicyTests/AppPolicyTests.swift') ? File.read('PolicyTests/AppPolicyTests.swift') : ''
@@ -405,7 +406,7 @@ unless view_controller.include?('navigationItem.titleView = UIImageView')
 end
 
 unless view_controller.include?('LocationTrackingPolicy.shouldRequestAuthorization') &&
-       view_controller.include?('locationManager.requestWhenInUseAuthorization()') &&
+       view_controller.include?('authorizationManager.requestWhenInUseAuthorization()') &&
        view_controller.include?('override func viewDidAppear')
   failures << 'ViewController.swift must defer and gate when-in-use authorization until the map screen is visible'
 end
@@ -413,18 +414,22 @@ if view_controller.include?('requestAlwaysAuthorization()')
   failures << 'ViewController.swift must not request always-on location authorization'
 end
 unless view_controller.include?('override func viewWillDisappear') &&
-       view_controller.include?('stopLocationTracking()') &&
-       view_controller.include?('isAwaitingLocation = false')
+       view_controller.include?('stopLocationTracking(reason: .viewDisappeared)') &&
+       view_controller.include?('locationTrackingCoordinator.stop(reason: reason)')
   failures << 'ViewController.swift must stop and invalidate location ownership when leaving the screen'
 end
 unless view_controller.include?('LocationTrackingPolicy.shouldAccept') &&
        view_controller.include?('.max { $0.timestamp < $1.timestamp }') &&
-       view_controller.include?('LocationSamplePolicy.accepts(location)')
+       view_controller.include?('locationTrackingCoordinator.handleMapboxSample') &&
+       policy.include?('LocationSamplePolicy.accepts(location, now: now)')
   failures << 'ViewController.swift must reject stale, inaccurate, or stale-session location callbacks'
 end
 unless view_controller.include?('func locationManagerDidChangeAuthorization') &&
        view_controller.include?('didChangeAuthorization status: CLAuthorizationStatus')
   failures << 'ViewController.swift must handle both current and legacy authorization callbacks'
+end
+unless view_controller.include?("guard state == .authorized else {\n            stopLocationTracking(reason: .authorizationLost)\n            return\n        }")
+  failures << 'ViewController.swift must stop location presentation for every non-authorized state'
 end
 unless view_controller.scan('DispatchQueue.main.async').length >= 3
   failures << 'ViewController.swift must marshal asynchronous location callbacks onto the main queue'
@@ -433,6 +438,31 @@ unless view_controller.include?('mapView?.setUserTrackingMode(.none, animated: f
        view_controller.include?('mapView?.showsUserLocation = false') &&
        view_controller.include?('mapView?.setUserTrackingMode(.follow, animated: false)')
   failures << 'ViewController.swift must explicitly own Mapbox location tracking transitions'
+end
+unless view_controller.include?('fileprivate final class LocationAcquisitionSession: NSObject, CLLocationManagerDelegate') &&
+       view_controller.include?('let generation: UInt64') &&
+       view_controller.include?('manager = CLLocationManager()') &&
+       view_controller.include?('locationAcquisitionSession = session') &&
+       view_controller.scan('self.locationAcquisitionSession === session').length == 2 &&
+       view_controller.include?('acceptOwnManagerSample(') &&
+       view_controller.include?('generation: session.generation')
+  failures << 'each app-manager acquisition must have a distinct delegate owner bound to an immutable generation'
+end
+unless policy.include?('lastGeneration += 1') &&
+       policy.include?('activeGeneration == generation') &&
+       policy.include?('handleOwnManagerFailure') &&
+       view_controller.include?('LocationManagerErrorPolicy.isRecoverable(error)') &&
+       policy.include?('error.code == CLError.locationUnknown.rawValue')
+  failures << 'location ownership policy must reject inactive generations and classify locationUnknown as recoverable'
+end
+unless view_controller.include?('stopLocationTracking(reason: .authorizationLost)') &&
+       view_controller.include?('handleOwnManagerFailure(') &&
+       view_controller.include?('guard result == .stopped, self.locationAcquisitionSession === session else') &&
+       mapbox_location_callback.include?('locationTrackingCoordinator.handleMapboxSample') &&
+       !mapbox_location_callback.include?('stopLocationTracking') &&
+       !mapbox_location_callback.include?('showsUserLocation = false') &&
+       !mapbox_location_callback.include?('setUserTrackingMode(.none')
+  failures << 'recoverable Mapbox samples must preserve tracking; only lifecycle, authorization, and manager failure may stop it'
 end
 
 unless policy.include?('maximumTokenLength = 1024') &&
@@ -459,6 +489,14 @@ unless policy.include?('maximumAge: TimeInterval = 30') &&
        policy.include?('maximumHorizontalAccuracy: CLLocationAccuracy = 100')
   failures << 'AppPolicy.swift must bound location freshness, future skew, and horizontal accuracy'
 end
+unless policy.include?('struct LocationTrackingCoordinator') &&
+       policy.include?('case awaitingOwnManagerLocation') &&
+       policy.include?('case mapboxTracking') &&
+       policy.include?('return .ignoredRecoverable') &&
+       policy.include?('return .ignoredStopped') &&
+       policy.include?('LocationSamplePolicy.accepts(location, now: now)')
+  failures << 'AppPolicy.swift must coordinate own-manager handoff, recoverable Mapbox rejection, and terminal stops'
+end
 
 [
   'testCoordinateRejectsNullIslandSentinel',
@@ -468,7 +506,10 @@ end
   'testMapStyleURLRejectsFragmentsAndOversizedValues',
   'testRejectsStaleLocation',
   'testRejectsImplausiblyFutureLocation',
-  'testStaleSessionCallbackIsRejected'
+  'testStaleSessionCallbackIsRejected',
+  'testRecoverableMapboxUpdatesPreserveTrackingUntilAValidSampleArrives',
+  'testTerminalStopsDisableTrackingAndRejectLaterSamples',
+  'testCoordinatorRequiresAnActiveOwnManagerSessionBeforeMapboxOwnership'
 ].each do |test_name|
   failures << "PolicyTests must retain #{test_name}" unless policy_tests.include?(test_name)
 end
@@ -476,6 +517,10 @@ unless File.read('Makefile').include?('policy-mutation-test') &&
        File.exist?('scripts/check_policy_mutations.rb') &&
        File.read('scripts/check_policy_mutations.rb').include?('Killed #{mutations.length} policy mutations')
   failures << 'Makefile must run the focused Swift policy mutation suite on macOS'
+end
+mutation_script = File.read('scripts/check_policy_mutations.rb')
+unless mutation_script.include?("  File.write(SOURCE, original)\n\n  integration_mutations.each")
+  failures << 'Policy mutation checks must restore AppPolicy.swift before integration mutations'
 end
 
 if view_controller.match?(/annotation\.title!/) || view_controller.include?('manager.location!.coordinate')
