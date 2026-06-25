@@ -99,6 +99,8 @@ begin
     end
   end
 
+  File.write(SOURCE, original)
+
   integration_mutations.each do |name, (before, after)|
     unless original_view_controller.include?(before)
       abort "integration mutation source missing for #{name}"

@@ -5,6 +5,8 @@
 - Stopped active location sessions and Mapbox presentation when authorization
   returns to any non-authorized state, including privacy resets to undetermined.
 - Added a source contract and hostile mutation for the authorization-reset path.
+- Restored the portable policy source before integration mutations so failures
+  prove the controller mutation was actually rejected.
 
 ## 2026-06-21
 

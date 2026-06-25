@@ -518,6 +518,10 @@ unless File.read('Makefile').include?('policy-mutation-test') &&
        File.read('scripts/check_policy_mutations.rb').include?('Killed #{mutations.length} policy mutations')
   failures << 'Makefile must run the focused Swift policy mutation suite on macOS'
 end
+mutation_script = File.read('scripts/check_policy_mutations.rb')
+unless mutation_script.include?("  File.write(SOURCE, original)\n\n  integration_mutations.each")
+  failures << 'Policy mutation checks must restore AppPolicy.swift before integration mutations'
+end
 
 if view_controller.match?(/annotation\.title!/) || view_controller.include?('manager.location!.coordinate')
   failures << 'ViewController.swift must not force unwrap annotation or location values'
