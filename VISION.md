@@ -49,8 +49,8 @@ Priority:
 
 Next priorities:
 
-- Add README setup notes for Mapbox credentials and Xcode version
-- Include simulator verification notes for annotation behavior
+- Execute the exact-commit device verification matrix with synthetic or reviewed
+  public location fixtures and privacy-safe evidence
 
 Contribution rules:
 

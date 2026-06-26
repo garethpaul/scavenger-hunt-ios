@@ -44,6 +44,7 @@ location_request_plan = 'docs/plans/2026-06-13-location-request-gating.md'
 make_root_plan = 'docs/plans/2026-06-14-make-root-override-protection.md'
 make_authority_plan = 'docs/plans/2026-06-21-make-authority-isolation.md'
 coordinate_plan = 'docs/plans/2026-06-17-configurable-demo-coordinates.md'
+legacy_setup_plan = 'docs/plans/2026-06-25-mapbox-legacy-setup-guide.md'
 failures << "#{canonical_plan} is missing" unless File.exist?(canonical_plan)
 failures << "#{signing_team_plan} is missing" unless File.exist?(signing_team_plan)
 failures << "#{ci_plan} is missing" unless File.exist?(ci_plan)
@@ -55,12 +56,30 @@ failures << "#{location_request_plan} is missing" unless File.exist?(location_re
 failures << "#{make_root_plan} is missing" unless File.exist?(make_root_plan)
 failures << "#{make_authority_plan} is missing" unless File.exist?(make_authority_plan)
 failures << "#{coordinate_plan} is missing" unless File.exist?(coordinate_plan)
+failures << "#{legacy_setup_plan} is missing" unless File.exist?(legacy_setup_plan)
 failures << 'docs/plans must contain at least one completed plan' if docs_plans.empty?
 
 docs_plans.each do |plan_path|
   plan = File.read(plan_path)
   unless plan.include?('Status: Completed') && plan.include?('make check')
     failures << "#{plan_path} must record completed status and make check verification"
+  end
+end
+
+device_verification_path = 'DEVICE_VERIFICATION.md'
+unless File.exist?(device_verification_path)
+  failures << "#{device_verification_path} is missing"
+else
+  device_verification = File.read(device_verification_path).gsub(/\s+/, ' ')
+  [
+    'same exact commit',
+    'Mapbox iOS SDK 3.1.2',
+    'CocoaPods 1.1.1',
+    'does not contain an arm64 simulator slice',
+    'Physical-device signing',
+    'Do not call the matrix complete'
+  ].each do |contract|
+    failures << "#{device_verification_path} must retain #{contract}" unless device_verification.include?(contract)
   end
 end
 
@@ -360,6 +379,34 @@ unless File.read('README.md').include?(make_root_plan)
 end
 unless File.read('README.md').include?(coordinate_plan)
   failures << "README.md must reference #{coordinate_plan}"
+end
+unless File.read('README.md').include?(legacy_setup_plan)
+  failures << "README.md must reference #{legacy_setup_plan}"
+end
+
+readme = File.read('README.md')
+if readme.include?('Open `TreasureHunt.xcodeproj`')
+  failures << 'README.md must direct contributors to open engagement.xcworkspace, not TreasureHunt.xcodeproj'
+end
+[
+  '### Legacy Toolchain Contract',
+  'Swift 4 with an iOS 12.0 deployment target',
+  'Mapbox iOS SDK 3.1.2',
+  'CocoaPods 1.1.1',
+  'engagement.xcworkspace',
+  'no arm64 simulator slice',
+  '## Simulator And Device Verification',
+  '[`DEVICE_VERIFICATION.md`](DEVICE_VERIFICATION.md)'
+].each do |contract|
+  failures << "README.md must retain legacy setup guidance: #{contract}" unless readme.include?(contract)
+end
+
+vision = File.read('VISION.md')
+[
+  'Add README setup notes for Mapbox credentials and Xcode version',
+  'Include simulator verification notes for annotation behavior'
+].each do |completed_priority|
+  failures << "VISION.md must not retain completed priority: #{completed_priority}" if vision.include?(completed_priority)
 end
 
 view_controller = File.read('engagement/ViewController.swift')
