@@ -1,5 +1,59 @@
 # Changes
 
+## 2026-06-26 15:42 PDT - P0 - Surface historical Mapbox alert boundary
+
+### Summary
+
+Rechecked the open historical Mapbox secret alert and surfaced the repository's
+existing credential-owner revocation boundary in primary setup guidance.
+
+### Work completed
+
+- Verified alert 1 remains open, publicly leaked, provider-validity unknown,
+  and limited to historical commit `cd55b858f1326c9d6f7952dada0bde68ae0f78a6`.
+- Confirmed the current tree contains the build-setting placeholder, ignored
+  local secrets file, bounded public-token policy, and tracked-token guard.
+- Reused the completed `2026-06-12-mapbox-secret-token-guard.md` decision rather
+  than creating duplicate security work.
+- Added a README contract requiring the exact historical location, keep-open
+  rule, and prohibition on retrieving or falsely resolving the value.
+
+### Threads
+
+- Started: none; this bounded security review was completed directly.
+- Continued: continuous open-source maintenance loop.
+- Stopped: none.
+
+### Files changed
+
+- `README.md` — visible historical-alert and revocation guidance.
+- `scripts/check_ios_contract.rb` — durable README boundary contract.
+- `CHANGES.md` — this maintenance-cycle record.
+
+### Validation
+
+- GitHub secret-scanning metadata review — completed without reading the value.
+- Current tracked-tree review — no checked-in Mapbox token outside vendored code.
+- `make check` — passed the root authority and Ruby contract gates; Linux
+  correctly skipped macOS-only Swift policy, mutation, and legacy Xcode work.
+- Four isolated provenance, keep-open, owner-evidence, and safe-handling
+  mutations — all rejected.
+- Current-tree gitleaks and `git diff --check` — passed with no findings.
+
+### Bugs / findings
+
+- P0 external blocker: source-control cleanup cannot establish account-side
+  revocation while provider validity remains unknown.
+
+### Blockers
+
+- Credential-owner revocation or rotation evidence is required before the alert
+  can be truthfully resolved.
+
+### Next action
+
+- Run repository and hosted checks, then merge this guidance amendment.
+
 ## 2026-06-26 - P2 - Bound visible-screen location acquisition
 
 ### Summary
