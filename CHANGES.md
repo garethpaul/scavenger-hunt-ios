@@ -1,5 +1,44 @@
 # Changes
 
+## 2026-06-26 - P2 - Bound visible-screen location acquisition
+
+### Summary
+
+Visible-screen location acquisition stops after one 15-second deadline when no
+acceptable fix arrives, preventing repeated recoverable errors or rejected
+samples from leaving continuous Core Location updates active indefinitely.
+
+### Work completed
+
+- Added a cancellable per-session deadline before continuous location updates.
+- Added a generation-aware timeout transition and current-session identity gate.
+- Added policy tests for current and stale timeout generations plus hostile
+  source mutations for cancellation, identity, and presentation cleanup.
+- Preserved when-in-use authorization, accepted-sample handoff, coordinate
+  privacy, recoverable Mapbox behavior, and view-disappearance cleanup.
+
+### Validation
+
+- Focused RED/GREEN source contracts passed in the official Ruby 3.3 container.
+- Ruby syntax checks passed for the static and mutation contracts.
+- Full repository, hosted Swift, legacy x86_64 build, and CodeQL evidence remain
+  required before merge.
+
+### Files changed
+
+- `Sources/ScavengerHuntPolicies/AppPolicy.swift`
+- `PolicyTests/AppPolicyTests.swift`
+- `engagement/ViewController.swift`
+- `scripts/check_ios_contract.rb`
+- `scripts/check_policy_mutations.rb`
+- repository guidance and implementation/design plans
+
+### Blockers
+
+- This Linux host has no native Ruby installation or Apple Core Location/Xcode
+  runtime; Ruby runs in the official container and Apple validation remains a
+  hosted exact-head requirement.
+
 ## 2026-06-26 05:53 - P2 - Document legacy Mapbox setup and verification
 
 ### Summary

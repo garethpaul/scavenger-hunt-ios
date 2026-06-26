@@ -55,6 +55,7 @@
 - See `VISION.md` for project direction and contribution guardrails.
 - See `docs/plans/2026-06-08-scavenger-hunt-ios-baseline.md` for the canonical Mapbox/iOS contract baseline.
 - See `docs/plans/2026-06-08-location-authorization.md` for the location permission guard.
+- Visible-screen location acquisition stops after one 15-second deadline when no acceptable fix arrives; preserve timeout cancellation and current-generation ownership.
 - `Pods/` is vendored dependency code; do not hand-edit it unless intentionally updating dependencies.
 
 ## Agent workflow

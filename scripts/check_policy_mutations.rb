@@ -29,6 +29,10 @@ mutations = {
     "guard case .awaitingOwnManagerLocation(let activeGeneration) = state,\n              activeGeneration == generation else {\n            return .ignoredInactive",
     "guard case .awaitingOwnManagerLocation = state else {\n            return .ignoredInactive"
   ],
+  'allow an inactive generation timeout to stop the current session' => [
+    "mutating func handleOwnManagerTimeout(generation: UInt64) -> LocationManagerFailureResult {\n        guard case .awaitingOwnManagerLocation(let activeGeneration) = state,\n              activeGeneration == generation else {",
+    "mutating func handleOwnManagerTimeout(generation: UInt64) -> LocationManagerFailureResult {\n        guard case .awaitingOwnManagerLocation = state else {"
+  ],
   'make recoverable manager failures terminal' => ['guard !isRecoverable else {', 'guard isRecoverable else {'],
   'ignore terminal manager failures' => ["state = .stopped\n        return .stopped", 'return .ignoredRecoverable'],
   'misclassify locationUnknown as terminal' => ['error.code == CLError.locationUnknown.rawValue', 'error.code != CLError.locationUnknown.rawValue'],
@@ -76,6 +80,18 @@ integration_mutations = {
   'allow a stale failure session to stop the current generation' => [
     'guard result == .stopped, self.locationAcquisitionSession === session else {',
     'guard result == .stopped, self.locationAcquisitionSession != nil else {'
+  ],
+  'leave the acquisition timeout scheduled after stop' => [
+    'timeoutWorkItem?.cancel()',
+    '_ = timeoutWorkItem'
+  ],
+  'allow a stale timeout session to stop the current generation' => [
+    "fileprivate func locationAcquisitionSessionDidTimeOut(_ session: LocationAcquisitionSession) {\n        DispatchQueue.main.async { [weak self] in\n            guard let self = self else {\n                return\n            }\n\n            let result = self.locationTrackingCoordinator.handleOwnManagerTimeout(\n                generation: session.generation\n            )\n            guard result == .stopped, self.locationAcquisitionSession === session else {",
+    "fileprivate func locationAcquisitionSessionDidTimeOut(_ session: LocationAcquisitionSession) {\n        DispatchQueue.main.async { [weak self] in\n            guard let self = self else {\n                return\n            }\n\n            let result = self.locationTrackingCoordinator.handleOwnManagerTimeout(\n                generation: session.generation\n            )\n            guard result == .stopped, self.locationAcquisitionSession != nil else {"
+  ],
+  'skip timeout presentation cleanup' => [
+    "self.locationAcquisitionSession = nil\n            self.stopMapboxPresentation()\n        }\n    }\n\n    func mapView",
+    "self.locationAcquisitionSession = nil\n        }\n    }\n\n    func mapView"
   ]
 }.freeze
 

@@ -395,6 +395,32 @@ final class LocationTrackingCoordinatorTests: XCTestCase {
         XCTAssertTrue(coordinator.isAwaitingOwnManagerLocation)
     }
 
+    func testCurrentGenerationTimeoutStopsAwaitingLocation() {
+        var coordinator = LocationTrackingCoordinator()
+        let generation = coordinator.startAwaitingOwnManagerLocation()!
+
+        XCTAssertEqual(
+            coordinator.handleOwnManagerTimeout(generation: generation),
+            .stopped
+        )
+        XCTAssertFalse(coordinator.isAwaitingOwnManagerLocation)
+        XCTAssertFalse(coordinator.isMapboxTrackingEnabled)
+    }
+
+    func testStaleGenerationTimeoutCannotStopCurrentLocationSession() {
+        var coordinator = LocationTrackingCoordinator()
+        let generationOne = coordinator.startAwaitingOwnManagerLocation()!
+        coordinator.stop(reason: .viewDisappeared)
+        let generationTwo = coordinator.startAwaitingOwnManagerLocation()!
+
+        XCTAssertEqual(
+            coordinator.handleOwnManagerTimeout(generation: generationOne),
+            .ignoredInactive
+        )
+        XCTAssertTrue(coordinator.isAwaitingOwnManagerLocation)
+        XCTAssertTrue(coordinator.acceptOwnManagerSample(generation: generationTwo))
+    }
+
     private func makeLocation(accuracy: CLLocationAccuracy, age: TimeInterval) -> CLLocation {
         return CLLocation(
             coordinate: CLLocationCoordinate2D(latitude: 37.1, longitude: -122.2),

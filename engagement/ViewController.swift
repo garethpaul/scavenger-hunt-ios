@@ -11,13 +11,17 @@ fileprivate protocol LocationAcquisitionSessionDelegate: class {
         _ session: LocationAcquisitionSession,
         didFailWithError error: Error
     )
+    func locationAcquisitionSessionDidTimeOut(_ session: LocationAcquisitionSession)
 }
 
 fileprivate final class LocationAcquisitionSession: NSObject, CLLocationManagerDelegate {
+    private static let timeoutSeconds: TimeInterval = 15
+
     let generation: UInt64
 
     private weak var delegate: LocationAcquisitionSessionDelegate?
     private let manager: CLLocationManager
+    private var timeoutWorkItem: DispatchWorkItem?
 
     init(generation: UInt64, delegate: LocationAcquisitionSessionDelegate) {
         self.generation = generation
@@ -31,10 +35,23 @@ fileprivate final class LocationAcquisitionSession: NSObject, CLLocationManagerD
     }
 
     func start() {
+        let timeoutWorkItem = DispatchWorkItem { [weak self] in
+            guard let self = self else {
+                return
+            }
+            self.delegate?.locationAcquisitionSessionDidTimeOut(self)
+        }
+        self.timeoutWorkItem = timeoutWorkItem
+        DispatchQueue.main.asyncAfter(
+            deadline: .now() + LocationAcquisitionSession.timeoutSeconds,
+            execute: timeoutWorkItem
+        )
         manager.startUpdatingLocation()
     }
 
     func stop() {
+        timeoutWorkItem?.cancel()
+        timeoutWorkItem = nil
         manager.stopUpdatingLocation()
         manager.delegate = nil
     }
@@ -273,6 +290,25 @@ final class ViewController: UIViewController, CLLocationManagerDelegate, MGLMapV
             let result = self.locationTrackingCoordinator.handleOwnManagerFailure(
                 generation: session.generation,
                 isRecoverable: LocationManagerErrorPolicy.isRecoverable(error)
+            )
+            guard result == .stopped, self.locationAcquisitionSession === session else {
+                return
+            }
+
+            session.stop()
+            self.locationAcquisitionSession = nil
+            self.stopMapboxPresentation()
+        }
+    }
+
+    fileprivate func locationAcquisitionSessionDidTimeOut(_ session: LocationAcquisitionSession) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else {
+                return
+            }
+
+            let result = self.locationTrackingCoordinator.handleOwnManagerTimeout(
+                generation: session.generation
             )
             guard result == .stopped, self.locationAcquisitionSession === session else {
                 return
