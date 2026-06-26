@@ -71,6 +71,14 @@ The runtime accepts only bounded public `pk.` tokens and fails closed with a
 generic setup message rather than constructing a map with a placeholder, secret
 token, control characters, or an oversized value.
 
+GitHub secret scanning still reports one historical Mapbox secret-token alert
+from commit `cd55b858f1326c9d6f7952dada0bde68ae0f78a6`. The token is absent from
+the current tree, which uses `$(MAPBOX_ACCESS_TOKEN)` plus tracked-file guards,
+but repository cleanup cannot prove account-side revocation. Keep the alert open
+until the credential owner confirms revocation or rotation. Maintainers must not
+retrieve, test, copy, or resolve the historical value based only on current-tree
+cleanup.
+
 ### Legacy Toolchain Contract
 
 Treat the checked-in build metadata as a historical compatibility contract, not

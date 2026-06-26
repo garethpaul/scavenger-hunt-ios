@@ -396,6 +396,14 @@ unless File.read('README.md').include?(legacy_setup_plan)
 end
 
 readme = File.read('README.md')
+[
+  'cd55b858f1326c9d6f7952dada0bde68ae0f78a6',
+  'Keep the alert open',
+  'until the credential owner confirms revocation or rotation',
+  'retrieve, test, copy, or resolve the historical value'
+].each do |contract|
+  failures << "README.md must retain the historical Mapbox alert boundary: #{contract}" unless readme.include?(contract)
+end
 if readme.include?('Open `TreasureHunt.xcodeproj`')
   failures << 'README.md must direct contributors to open engagement.xcworkspace, not TreasureHunt.xcodeproj'
 end
