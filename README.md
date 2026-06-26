@@ -71,6 +71,28 @@ The runtime accepts only bounded public `pk.` tokens and fails closed with a
 generic setup message rather than constructing a map with a placeholder, secret
 token, control characters, or an oversized value.
 
+### Legacy Toolchain Contract
+
+Treat the checked-in build metadata as a historical compatibility contract, not
+as a claim that every current Apple toolchain can run the sample unchanged. The
+app target is Swift 4 with an iOS 12.0 deployment target. `Podfile.lock` pins
+Mapbox iOS SDK 3.1.2 and records CocoaPods 1.1.1 provenance; preserve that lock
+file unless a separate dependency-migration change intentionally replaces it.
+
+Run `pod install` without updating dependencies, then open
+`engagement.xcworkspace`. The Xcode project records legacy compatibility
+metadata and keeps `DEVELOPMENT_TEAM` blank, so select a signing team only in
+local Xcode settings. Keep the ignored `engagement/MapboxSecrets.xcconfig`
+local and configure only a public `pk.` token, an optional credential-free style
+URL, and optional synthetic or reviewed coordinate pairs.
+
+The vendored Mapbox framework contains x86_64 and i386 simulator slices and
+armv7, armv7s, and arm64 device slices, but no arm64 simulator slice. The
+canonical hosted build therefore uses an unsigned x86_64 simulator target.
+Apple Silicon simulator execution requires an Intel-compatible environment;
+do not treat an arm64 simulator failure as proof that source or policy tests
+failed.
+
 The checked-in map center and prize marker are reviewed public demo fallbacks.
 To use a different event location without editing source, set all values in a
 pair through local build settings: `MAP_CENTER_LATITUDE` with
@@ -85,7 +107,22 @@ terms.
 
 ## Running or Using the Project
 
-- Open `TreasureHunt.xcodeproj` in Xcode, choose the app or sample scheme, and run it on the matching simulator/device.
+- Open `engagement.xcworkspace` in Xcode, choose the shared `engagement` scheme,
+  and run it on a compatible simulator or locally signed device.
+
+## Simulator And Device Verification
+
+Use [`DEVICE_VERIFICATION.md`](DEVICE_VERIFICATION.md) for one exact commit.
+An x86_64 simulator can verify build, launch, local configuration, annotation,
+callout, and static map behavior. It cannot establish physical GPS accuracy,
+real permission changes, device signing, or location-session behavior on
+hardware. Those rows require a locally signed physical device and a synthetic
+or reviewed public location fixture.
+
+Never include a Mapbox token, private style URL, signing identity, provisioning
+profile, private event coordinate, precise user location, or device identifier
+in committed evidence. Keep unavailable rows explicitly `blocked` or `not run`;
+a successful build is not annotation, permission, location, or visual evidence.
 
 ## Testing and Verification
 
@@ -205,6 +242,8 @@ using the sample for a private event.
   local coordinate overrides and pairwise demo fallbacks.
 - See `docs/plans/2026-06-19-runtime-deep-review.md` for runtime policy, native
   test, mutation, and Xcode evidence.
+- See `docs/plans/2026-06-25-mapbox-legacy-setup-guide.md` for the legacy
+  credential, toolchain, simulator, and device-verification guide.
 
 ## Contributing
 

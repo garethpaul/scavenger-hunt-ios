@@ -1,5 +1,65 @@
 # Changes
 
+## 2026-06-26 05:53 - P2 - Document legacy Mapbox setup and verification
+
+### Summary
+
+Closed the two remaining setup-documentation roadmap items with metadata-backed
+credential, workspace, toolchain, simulator, device, and privacy guidance.
+
+### Work completed
+
+- Documented the Swift 4/iOS 12 app baseline, Mapbox 3.1.2 and CocoaPods 1.1.1
+  lock provenance, local public-token configuration, and local signing ownership.
+- Corrected the run entry point from the bare project to `engagement.xcworkspace`.
+- Added an exact-commit simulator/device verification matrix with every runtime
+  row explicitly `not run`.
+- Added Ruby contracts for the guide, matrix, completed roadmap state, and plan.
+
+### Threads
+
+- Started: none; the bounded documentation change was completed directly.
+- Continued: continuous open-source maintenance loop.
+- Stopped: none.
+
+### Files changed
+
+- `README.md` — legacy setup and simulator/device evidence boundaries.
+- `DEVICE_VERIFICATION.md` — privacy-safe exact-commit verification matrix.
+- `VISION.md` — removed completed setup-guide priorities.
+- `scripts/check_ios_contract.rb` — durable documentation contracts.
+- `docs/plans/2026-06-25-mapbox-legacy-setup-guide.md` — implementation and verification plan.
+- `CHANGES.md` — this maintenance-cycle record.
+
+### Validation
+
+- `make root-test` — passed after the documentation and contract edits.
+- `make check` in the official Ruby 3.3 container — passed; Linux correctly
+  skipped macOS-only Swift policy, mutation, and Xcode execution.
+- Eight isolated hostile documentation mutations — all rejected after tightening
+  the obsolete-project instruction and exact matrix-link assertions.
+- Manual metadata review — passed for Xcode project, Podfile lock, secrets template, workspace, and framework slices.
+
+### Bugs / findings
+
+- P2: README incorrectly instructed maintainers to open the bare Xcode project
+  despite the CocoaPods workspace being the supported build entry point.
+- P2: Setup text lacked the framework's no-arm64-simulator boundary and could
+  lead maintainers to misclassify Apple Silicon simulator failures.
+- P2: Initial documentation contracts accepted an obsolete bare-project
+  instruction and a renamed matrix link when equivalent text existed elsewhere;
+  isolated mutations exposed both weaknesses before publication.
+
+### Blockers
+
+- Local Swift, Xcode, simulator, and physical-device execution are unavailable;
+  Ruby validation is available through the official Ruby 3.3 container.
+
+### Next action
+
+- Run exact-head hosted static, Swift policy, mutation, and x86_64 Xcode gates;
+  then review and merge if clean.
+
 ## 2026-06-25
 
 - Stopped active location sessions and Mapbox presentation when authorization
