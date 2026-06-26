@@ -21,8 +21,15 @@ samples from leaving continuous Core Location updates active indefinitely.
 
 - Focused RED/GREEN source contracts passed in the official Ruby 3.3 container.
 - Ruby syntax checks passed for the static and mutation contracts.
-- Full repository, hosted Swift, legacy x86_64 build, and CodeQL evidence remain
-  required before merge.
+- Repository-root and external-working-directory `make check` passed with
+  truthful Linux skips for Apple-only execution.
+- Five isolated timeout mutations were rejected locally.
+- Exact implementation head `5fff48323beabe383dfbdce3f3d2d669d16dd617`
+  passed Ubuntu static checks, 29 Swift tests, 22 policy mutations, 11 location
+  integration mutations, the unsigned x86_64 Xcode build, and CodeQL Actions
+  plus Ruby analysis.
+- Codex review failed with OpenAI HTTP 401 before analysis; immutable manual
+  review found no correctness, privacy, lifecycle, or compatibility findings.
 
 ### Files changed
 

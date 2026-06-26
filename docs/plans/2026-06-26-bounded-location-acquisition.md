@@ -67,3 +67,10 @@ before merge.
 Local evidence: both repository-root and external-working-directory `make
 check` passed in Ruby 3.3 with truthful macOS-only skips; five isolated timeout
 mutations were rejected; Ruby and shell syntax plus `git diff --check` passed.
+
+Implementation head `5fff48323beabe383dfbdce3f3d2d669d16dd617`
+passed the Ubuntu static contract, 29 native Swift policy tests, all 22 policy
+and 11 location-integration mutations, the unsigned x86_64 legacy Xcode build,
+and CodeQL Actions/Ruby analysis on 2026-06-26. The required Codex branch review
+failed with OpenAI HTTP 401 before analysis; an immutable manual review found no
+correctness, privacy, lifecycle, or compatibility findings.
