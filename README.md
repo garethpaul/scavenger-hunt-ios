@@ -126,10 +126,10 @@ a successful build is not annotation, permission, location, or visual evidence.
 
 ## Testing and Verification
 
-- `swift test` runs 20 native policy tests without loading the vendored Mapbox
+- `swift test` runs 29 native policy tests without loading the vendored Mapbox
   binary.
-- `ruby scripts/check_policy_mutations.rb` verifies nine hostile policy changes
-  are caught.
+- `ruby scripts/check_policy_mutations.rb` verifies 33 hostile policy and
+  integration changes are caught.
 - `make check` runs static checks for Mapbox token placeholders, asset
   references, safe annotation-image handling, CocoaPods lock consistency, and
   location authorization before map tracking. It also reports whether an Xcode
@@ -140,6 +140,9 @@ a successful build is not annotation, permission, location, or visual evidence.
 - `make check` also requires each location authorization transition to consume
   the delegate-provided status and stop Mapbox follow mode after denial or
   revocation.
+- Visible-screen location acquisition stops after one 15-second deadline when
+  no acceptable fix arrives, and stale session deadlines cannot stop a newer
+  acquisition generation.
 - `make check` also requires the app to request location authorization only
   from the undetermined state during initial setup.
 - `make check` also rejects always-on location authorization prompts and plist

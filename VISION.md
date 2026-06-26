@@ -35,6 +35,8 @@ Priority:
 - Reject non-finite, out-of-range, and exact null-island sentinel coordinates
 - Accept location samples only while the map screen owns an active foreground
   request and only when freshness and accuracy bounds pass
+- Visible-screen location acquisition stops after one 15-second deadline when
+  no acceptable fix arrives
 - Avoid logging precise user coordinates
 - Keep Xcode workspace and scheme metadata portable across machines
 - Keep account-specific Xcode signing teams out of source control

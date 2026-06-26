@@ -48,6 +48,9 @@ Helpful reports include:
   screen becomes visible, stop updates when it leaves, and ignore stale-session,
   stale, future-dated, inaccurate, invalid, and null-island samples.
   It must request location authorization only from the undetermined state.
+- Visible-screen location acquisition stops after one 15-second deadline when
+  no acceptable fix arrives, preventing recoverable failures or rejected
+  samples from keeping Core Location active indefinitely.
 - Tracked non-vendored files are checked for public and secret Mapbox token formats;
   the historical secret-scanning alert still requires credential-owner
   revocation evidence before resolution.

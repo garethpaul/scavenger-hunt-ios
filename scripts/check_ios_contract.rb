@@ -45,6 +45,8 @@ make_root_plan = 'docs/plans/2026-06-14-make-root-override-protection.md'
 make_authority_plan = 'docs/plans/2026-06-21-make-authority-isolation.md'
 coordinate_plan = 'docs/plans/2026-06-17-configurable-demo-coordinates.md'
 legacy_setup_plan = 'docs/plans/2026-06-25-mapbox-legacy-setup-guide.md'
+bounded_location_design = 'docs/plans/2026-06-26-bounded-location-acquisition-design.md'
+bounded_location_plan = 'docs/plans/2026-06-26-bounded-location-acquisition.md'
 failures << "#{canonical_plan} is missing" unless File.exist?(canonical_plan)
 failures << "#{signing_team_plan} is missing" unless File.exist?(signing_team_plan)
 failures << "#{ci_plan} is missing" unless File.exist?(ci_plan)
@@ -57,6 +59,8 @@ failures << "#{make_root_plan} is missing" unless File.exist?(make_root_plan)
 failures << "#{make_authority_plan} is missing" unless File.exist?(make_authority_plan)
 failures << "#{coordinate_plan} is missing" unless File.exist?(coordinate_plan)
 failures << "#{legacy_setup_plan} is missing" unless File.exist?(legacy_setup_plan)
+failures << "#{bounded_location_design} is missing" unless File.exist?(bounded_location_design)
+failures << "#{bounded_location_plan} is missing" unless File.exist?(bounded_location_plan)
 failures << 'docs/plans must contain at least one completed plan' if docs_plans.empty?
 
 docs_plans.each do |plan_path|
@@ -372,6 +376,13 @@ end
   unless document.include?('validated local coordinate overrides')
     failures << "#{doc_path} must document validated local coordinate overrides"
   end
+  unless document.include?('Visible-screen location acquisition stops after one 15-second deadline')
+    failures << "#{doc_path} must document bounded visible-screen location acquisition"
+  end
+end
+
+unless File.read('AGENTS.md').include?('Visible-screen location acquisition stops after one 15-second deadline')
+  failures << 'AGENTS.md must preserve the bounded location-acquisition deadline'
 end
 
 unless File.read('README.md').include?(make_root_plan)
@@ -411,8 +422,10 @@ end
 
 view_controller = File.read('engagement/ViewController.swift')
 mapbox_location_callback = view_controller[/func mapView\(_ mapView: MGLMapView, didUpdate userLocation: MGLUserLocation\?\) \{.*?^    \}/m].to_s
+timeout_callback = view_controller[/fileprivate func locationAcquisitionSessionDidTimeOut\(_ session: LocationAcquisitionSession\) \{.*?^    \}/m].to_s
 policy_path = 'Sources/ScavengerHuntPolicies/AppPolicy.swift'
 policy = File.exist?(policy_path) ? File.read(policy_path) : ''
+timeout_transition = policy[/mutating func handleOwnManagerTimeout\(generation: UInt64\).*?^    \}/m].to_s
 policy_tests = File.exist?('PolicyTests/AppPolicyTests.swift') ? File.read('PolicyTests/AppPolicyTests.swift') : ''
 storyboard = File.read('engagement/Base.lproj/Main.storyboard')
 
@@ -490,14 +503,34 @@ unless view_controller.include?('fileprivate final class LocationAcquisitionSess
        view_controller.include?('let generation: UInt64') &&
        view_controller.include?('manager = CLLocationManager()') &&
        view_controller.include?('locationAcquisitionSession = session') &&
-       view_controller.scan('self.locationAcquisitionSession === session').length == 2 &&
+       view_controller.scan('self.locationAcquisitionSession === session').length == 3 &&
        view_controller.include?('acceptOwnManagerSample(') &&
        view_controller.include?('generation: session.generation')
   failures << 'each app-manager acquisition must have a distinct delegate owner bound to an immutable generation'
 end
+unless view_controller.match?(/^    private static let timeoutSeconds: TimeInterval = 15$/) &&
+       view_controller.include?('private var timeoutWorkItem: DispatchWorkItem?') &&
+       view_controller.include?('DispatchQueue.main.asyncAfter(') &&
+       view_controller.include?('timeoutWorkItem?.cancel()') &&
+       view_controller.include?('locationAcquisitionSessionDidTimeOut') &&
+       timeout_callback.include?('handleOwnManagerTimeout(') &&
+       timeout_callback.include?('generation: session.generation') &&
+       timeout_callback.include?('self.locationAcquisitionSession === session') &&
+       timeout_callback.include?('session.stop()') &&
+       timeout_callback.include?('self.locationAcquisitionSession = nil') &&
+       timeout_callback.include?('self.stopMapboxPresentation()') &&
+       view_controller.scan('self.locationAcquisitionSession === session').length == 3
+  failures << 'each app-manager acquisition must have one cancellable 15-second timeout bound to current session ownership'
+end
 unless policy.include?('lastGeneration += 1') &&
        policy.include?('activeGeneration == generation') &&
        policy.include?('handleOwnManagerFailure') &&
+       policy.include?('handleOwnManagerTimeout') &&
+       timeout_transition.include?('activeGeneration == generation') &&
+       timeout_transition.include?('state = .stopped') &&
+       timeout_transition.include?('return .stopped') &&
+       policy_tests.include?('testCurrentGenerationTimeoutStopsAwaitingLocation') &&
+       policy_tests.include?('testStaleGenerationTimeoutCannotStopCurrentLocationSession') &&
        view_controller.include?('LocationManagerErrorPolicy.isRecoverable(error)') &&
        policy.include?('error.code == CLError.locationUnknown.rawValue')
   failures << 'location ownership policy must reject inactive generations and classify locationUnknown as recoverable'

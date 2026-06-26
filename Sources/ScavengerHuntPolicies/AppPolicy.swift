@@ -229,6 +229,16 @@ struct LocationTrackingCoordinator {
         return .stopped
     }
 
+    mutating func handleOwnManagerTimeout(generation: UInt64) -> LocationManagerFailureResult {
+        guard case .awaitingOwnManagerLocation(let activeGeneration) = state,
+              activeGeneration == generation else {
+            return .ignoredInactive
+        }
+
+        state = .stopped
+        return .stopped
+    }
+
     mutating func handleMapboxSample(
         _ location: CLLocation?,
         now: Date = Date()
